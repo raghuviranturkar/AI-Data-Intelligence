@@ -7,8 +7,10 @@ import shutil
 from typing import Dict, Any
 from datetime import datetime
 from fastapi import UploadFile
+import pandas as pd
 
 from .dataset_inspector import inspect_dataset
+from .validator import validate_dataset
 
 
 class UploadService:
@@ -57,16 +59,31 @@ class UploadService:
         finally:
             await file.close()
         
-        # Inspect dataset
+        # Load dataset for validation
         try:
+            # Load based on file type
+            if file_extension == '.csv':
+                df = pd.read_csv(file_path)
+            else:
+                df = pd.read_excel(file_path)
+            
+            # Inspect dataset
             summary = inspect_dataset(file_path)
+            
+            # Validate dataset
+            validation_report = validate_dataset(df, file.filename)
+            
+            # Combine results
+            result = {
+                "file_path": file_path,
+                "summary": summary,
+                "validation": validation_report
+            }
+            
+            return result
+            
         except Exception as e:
-            # Clean up file if inspection fails
+            # Clean up file if processing fails
             if os.path.exists(file_path):
                 os.remove(file_path)
-            raise Exception(f"Error inspecting dataset: {str(e)}")
-        
-        return {
-            "file_path": file_path,
-            "summary": summary
-        }
+            raise Exception(f"Error processing dataset: {str(e)}")

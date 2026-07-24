@@ -5,7 +5,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
-from app.schemas.dataset import UploadResponse, ErrorResponse, DatasetSummary
+from app.schemas.dataset import UploadResponse, ErrorResponse
 from app.services.upload_service import UploadService
 
 # Configure logging
@@ -64,10 +64,10 @@ async def health_check():
 )
 async def upload_dataset(file: UploadFile = File(...)):
     """
-    Upload and inspect a dataset
+    Upload and analyze a dataset
     
     Accepts CSV, XLSX, or XLS files.
-    Returns comprehensive dataset analysis.
+    Returns comprehensive dataset analysis including validation.
     """
     logger.info(f"Received file: {file.filename}")
     
@@ -75,13 +75,14 @@ async def upload_dataset(file: UploadFile = File(...)):
         # Process the upload
         result = await upload_service.process_upload(file)
         
-        # Convert summary to DatasetSummary model
-        dataset_summary = DatasetSummary(**result["summary"])
-        
+        # Return combined response
         return UploadResponse(
             status="success",
             message=f"File {file.filename} processed successfully",
-            data=dataset_summary
+            data={
+                "dataset": result["summary"],
+                "validation": result["validation"]
+            }
         )
         
     except ValueError as e:

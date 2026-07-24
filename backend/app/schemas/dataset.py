@@ -20,11 +20,19 @@ class DatasetSummary(BaseModel):
     basic_statistics: Dict[str, Any]
 
 
+class ValidationReport(BaseModel):
+    """Response model for validation report"""
+    dataset: Dict[str, Any]
+    validation: Dict[str, Any]
+    profiling: Dict[str, Any]
+    quality: Dict[str, Any]
+
+
 class UploadResponse(BaseModel):
     """Response model for upload endpoint"""
     status: str
     message: Optional[str] = None
-    data: Optional[DatasetSummary] = None
+    data: Optional[Dict[str, Any]] = None
 
 
 class ErrorResponse(BaseModel):
