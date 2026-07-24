@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="AI Data Intelligence Engine",
-    description="API for data processing and analysis",
+    description="API for data processing, analysis, and intelligence",
     version="1.0.0"
 )
 
@@ -67,7 +67,14 @@ async def upload_dataset(file: UploadFile = File(...)):
     Upload and analyze a dataset
     
     Accepts CSV, XLSX, or XLS files.
-    Returns comprehensive dataset analysis including validation and cleaning recommendations.
+    Returns comprehensive dataset analysis including:
+    - Dataset inspection
+    - Validation & quality
+    - Cleaning recommendations
+    - Outlier detection
+    - Exploratory Data Analysis (EDA)
+    - Visualization recommendations
+    - Business insights
     """
     logger.info(f"Received file: {file.filename}")
     
@@ -82,7 +89,9 @@ async def upload_dataset(file: UploadFile = File(...)):
             data={
                 "dataset": result["summary"],
                 "validation": result["validation"],
-                "cleaning": result["cleaning"]
+                "cleaning": result["cleaning"],
+                "outliers": result["outliers"],
+                "eda": result["eda"]
             }
         )
         

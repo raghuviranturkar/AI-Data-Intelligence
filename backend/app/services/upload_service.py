@@ -13,6 +13,7 @@ from .dataset_inspector import inspect_dataset
 from .validator import validate_dataset
 from .cleaning_engine import generate_cleaning_recommendations
 from .outlier_engine import detect_outliers
+from .eda_engine import perform_eda
 
 
 class UploadService:
@@ -88,13 +89,17 @@ class UploadService:
             # Detect outliers
             outlier_report = detect_outliers(df, context)
             
+            # Perform EDA
+            eda_report = perform_eda(df, context)
+            
             # Combine results
             result = {
                 "file_path": file_path,
                 "summary": summary,
                 "validation": validation_report,
                 "cleaning": cleaning_report,
-                "outliers": outlier_report
+                "outliers": outlier_report,
+                "eda": eda_report
             }
             
             return result
