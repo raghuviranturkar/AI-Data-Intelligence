@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="AI Data Intelligence Engine",
-    description="API for data processing, analysis, and intelligence",
+    description="API for data processing, analysis, and ML preparation",
     version="1.0.0"
 )
 
@@ -73,13 +73,13 @@ async def upload_dataset(file: UploadFile = File(...)):
     - Cleaning recommendations
     - Outlier detection
     - Exploratory Data Analysis (EDA)
-    - Visualization recommendations
-    - Business insights
+    - Feature Engineering recommendations
+    - ML readiness assessment
     """
     logger.info(f"Received file: {file.filename}")
     
     try:
-        # Process the upload
+        # Process the upload using pipeline
         result = await upload_service.process_upload(file)
         
         # Return combined response
@@ -87,11 +87,12 @@ async def upload_dataset(file: UploadFile = File(...)):
             status="success",
             message=f"File {file.filename} processed successfully",
             data={
-                "dataset": result["summary"],
-                "validation": result["validation"],
-                "cleaning": result["cleaning"],
-                "outliers": result["outliers"],
-                "eda": result["eda"]
+                "dataset": result.get("dataset", {}),
+                "validation": result.get("validation", {}),
+                "cleaning": result.get("cleaning", {}),
+                "outliers": result.get("outliers", {}),
+                "eda": result.get("eda", {}),
+                "feature_engineering": result.get("feature_engineering", {})
             }
         )
         

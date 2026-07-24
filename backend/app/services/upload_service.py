@@ -1,6 +1,6 @@
 """
 Upload Service
-Handles file upload and processing
+Handles file upload and processing using the Data Intelligence Pipeline
 """
 import os
 import shutil
@@ -9,11 +9,7 @@ from datetime import datetime
 from fastapi import UploadFile
 import pandas as pd
 
-from .dataset_inspector import inspect_dataset
-from .validator import validate_dataset
-from .cleaning_engine import generate_cleaning_recommendations
-from .outlier_engine import detect_outliers
-from .eda_engine import perform_eda
+from .pipeline import run_pipeline
 
 
 class UploadService:
@@ -31,7 +27,7 @@ class UploadService:
     
     async def process_upload(self, file: UploadFile) -> Dict[str, Any]:
         """
-        Process uploaded file
+        Process uploaded file using the complete pipeline
         
         Args:
             file: Uploaded file object
@@ -62,47 +58,21 @@ class UploadService:
         finally:
             await file.close()
         
-        # Load dataset for validation
+        # Process through pipeline
         try:
-            # Load based on file type
+            # Load dataset
             if file_extension == '.csv':
                 df = pd.read_csv(file_path)
             else:
                 df = pd.read_excel(file_path)
             
-            # Inspect dataset
-            summary = inspect_dataset(file_path)
+            # Run pipeline
+            results = run_pipeline(df, file.filename)
             
-            # Validate dataset
-            validation_report = validate_dataset(df, file.filename)
+            # Add file path to results
+            results["file_path"] = file_path
             
-            # Build shared context for downstream engines
-            context = {
-                "dataframe": df,
-                "validation": validation_report,
-                "profiling": summary
-            }
-            
-            # Generate cleaning recommendations
-            cleaning_report = generate_cleaning_recommendations(df, validation_report)
-            
-            # Detect outliers
-            outlier_report = detect_outliers(df, context)
-            
-            # Perform EDA
-            eda_report = perform_eda(df, context)
-            
-            # Combine results
-            result = {
-                "file_path": file_path,
-                "summary": summary,
-                "validation": validation_report,
-                "cleaning": cleaning_report,
-                "outliers": outlier_report,
-                "eda": eda_report
-            }
-            
-            return result
+            return results
             
         except Exception as e:
             # Clean up file if processing fails
