@@ -22,15 +22,23 @@ class DataValidator:
         self.df = df
         self.file_name = file_name
         self.quality_score = 100
-        self.warnings = []
+        self._warnings = set()  # Use set to avoid duplicates
         self.validation_results = {}
         
+    def _add_warning(self, warning: str) -> None:
+        """Add a warning (automatically handles duplicates)"""
+        self._warnings.add(warning)
+    
+    def _get_warnings(self) -> List[str]:
+        """Get unique warnings as a list"""
+        return list(self._warnings)
+    
     def validate_empty_dataset(self) -> bool:
         """Check if dataset is empty"""
         is_empty = self.df.empty
         if is_empty:
             self.quality_score -= 30
-            self.warnings.append("Dataset is empty. No rows found.")
+            self._add_warning("Dataset is empty. No rows found.")
         return is_empty
     
     def detect_empty_columns(self) -> List[str]:
@@ -38,7 +46,7 @@ class DataValidator:
         empty_cols = self.df.columns[self.df.isnull().all()].tolist()
         if empty_cols:
             self.quality_score -= 5 * len(empty_cols)
-            self.warnings.append(f"Empty columns found: {', '.join(empty_cols)}")
+            self._add_warning(f"Empty columns found: {', '.join(empty_cols)}")
         return empty_cols
     
     def detect_duplicate_columns(self) -> List[str]:
@@ -52,7 +60,7 @@ class DataValidator:
         
         if duplicate_cols:
             self.quality_score -= 5 * len(duplicate_cols)
-            self.warnings.append(f"Duplicate column names: {', '.join(duplicate_cols)}")
+            self._add_warning(f"Duplicate column names: {', '.join(duplicate_cols)}")
         return duplicate_cols
     
     def detect_constant_columns(self) -> List[str]:
@@ -62,7 +70,7 @@ class DataValidator:
             if len(self.df[col].dropna().unique()) <= 1:
                 constant_cols.append(col)
                 self.quality_score -= 3
-                self.warnings.append(f"'{col}' has constant values (provides no information)")
+                self._add_warning(f"'{col}' has constant values (provides no information)")
         return constant_cols
     
     def detect_high_missing_columns(self, threshold: float = 50.0) -> List[str]:
@@ -73,23 +81,34 @@ class DataValidator:
             if missing_pct > threshold:
                 high_missing.append(col)
                 self.quality_score -= 10
-                self.warnings.append(f"'{col}' has {missing_pct:.1f}% missing values (threshold: {threshold}%)")
+                self._add_warning(f"'{col}' has {missing_pct:.1f}% missing values (threshold: {threshold}%)")
         return high_missing
     
-    def detect_infinite_values(self) -> Dict[str, bool]:
+    def detect_infinite_values(self) -> Dict[str, Any]:
         """Detect infinite values in numeric columns"""
-        has_infinite = False
+        has_positive_inf = False
+        has_negative_inf = False
         infinite_columns = []
         
         for col in self.df.select_dtypes(include=[np.number]).columns:
-            if np.isinf(self.df[col]).any():
-                has_infinite = True
+            pos_inf = np.isposinf(self.df[col]).any()
+            neg_inf = np.isneginf(self.df[col]).any()
+            
+            if pos_inf or neg_inf:
                 infinite_columns.append(col)
                 self.quality_score -= 8
-                self.warnings.append(f"'{col}' contains infinite values (∞ or -∞)")
+                
+                if pos_inf:
+                    has_positive_inf = True
+                    self._add_warning(f"'{col}' contains positive infinity values (+∞)")
+                if neg_inf:
+                    has_negative_inf = True
+                    self._add_warning(f"'{col}' contains negative infinity values (-∞)")
         
         return {
-            "has_infinite": has_infinite,
+            "has_infinite": has_positive_inf or has_negative_inf,
+            "has_positive_inf": has_positive_inf,
+            "has_negative_inf": has_negative_inf,
             "infinite_columns": infinite_columns
         }
     
@@ -106,7 +125,7 @@ class DataValidator:
                 # Check if unique values equals total rows (likely ID)
                 if len(self.df[col].dropna().unique()) == len(self.df):
                     id_columns.append(col)
-                    self.warnings.append(f"'{col}' appears to be an identifier column")
+                    self._add_warning(f"'{col}' appears to be an identifier column")
         
         return id_columns
     
@@ -121,9 +140,11 @@ class DataValidator:
             if any(pattern in col_lower for pattern in date_patterns):
                 # Check if it can be converted to datetime
                 try:
-                    pd.to_datetime(self.df[col].dropna())
-                    date_columns.append(col)
-                    self.warnings.append(f"'{col}' appears to be a date/datetime column")
+                    sample = self.df[col].dropna()
+                    if not sample.empty:
+                        pd.to_datetime(sample)
+                        date_columns.append(col)
+                        self._add_warning(f"'{col}' appears to be a date/datetime column")
                 except:
                     pass
         
@@ -145,26 +166,42 @@ class DataValidator:
     def calculate_cardinality(self, threshold: int = 50) -> Dict[str, Any]:
         """Calculate cardinality and detect high cardinality columns"""
         high_cardinality = {}
-        for col in self.df.columns:
+        
+        # Only check categorical/text columns, not numeric
+        categorical_columns = self.df.select_dtypes(include=['object', 'string', 'category']).columns
+        
+        for col in categorical_columns:
             unique_count = self.df[col].nunique()
             if unique_count > threshold:
                 high_cardinality[col] = {
                     "unique_values": unique_count,
                     "total_rows": len(self.df),
-                    "ratio": unique_count / len(self.df)
+                    "ratio": round(unique_count / len(self.df), 2)
                 }
-                self.warnings.append(f"'{col}' has high cardinality ({unique_count} unique values)")
+                self._add_warning(f"'{col}' has high cardinality ({unique_count} unique values)")
         
         return high_cardinality
     
     def detect_target_candidates(self) -> List[str]:
-        """Detect potential target columns for ML"""
+        """
+        Detect potential target columns for ML
+        Excludes identifiers, datetime columns, and constant columns
+        """
         target_candidates = []
-        target_patterns = ['target', 'label', 'class', 'category', 
+        target_patterns = ['target', 'label', 'class', 
                           'purchase', 'churn', 'survive', 'default', 
                           'fraud', 'response', 'conversion']
         
+        # Get columns to exclude
+        id_columns = self.detect_id_columns()
+        date_columns = self.detect_date_columns()
+        constant_columns = self.detect_constant_columns()
+        excluded_columns = set(id_columns + date_columns + constant_columns)
+        
         for col in self.df.columns:
+            if col in excluded_columns:
+                continue
+                
             col_lower = col.lower().strip()
             # Check by name pattern
             if any(pattern in col_lower for pattern in target_patterns):
@@ -172,10 +209,19 @@ class DataValidator:
             # Check binary columns (could be target)
             elif len(self.df[col].dropna().unique()) == 2:
                 target_candidates.append(col)
+            # Check low cardinality columns (2-10 unique values)
+            elif 2 <= self.df[col].nunique() <= 10:
+                target_candidates.append(col)
         
-        # Remove duplicates
-        target_candidates = list(set(target_candidates))
-        return target_candidates
+        # Remove duplicates and keep first occurrence
+        seen = set()
+        unique_candidates = []
+        for col in target_candidates:
+            if col not in seen:
+                seen.add(col)
+                unique_candidates.append(col)
+        
+        return unique_candidates
     
     def get_column_statistics(self) -> Dict[str, Any]:
         """Get detailed column statistics"""
@@ -191,14 +237,23 @@ class DataValidator:
             
             # Add statistics based on column type
             if pd.api.types.is_numeric_dtype(self.df[col]):
-                col_stats.update({
-                    "mean": float(self.df[col].mean()) if not pd.isna(self.df[col].mean()) else None,
-                    "std": float(self.df[col].std()) if not pd.isna(self.df[col].std()) else None,
-                    "min": float(self.df[col].min()) if not pd.isna(self.df[col].min()) else None,
-                    "max": float(self.df[col].max()) if not pd.isna(self.df[col].max()) else None,
-                    "skewness": float(self.df[col].skew()) if not pd.isna(self.df[col].skew()) else None,
-                    "kurtosis": float(self.df[col].kurt()) if not pd.isna(self.df[col].kurt()) else None,
-                })
+                # Check for infinite values
+                if np.isinf(self.df[col]).any():
+                    col_stats["has_infinite"] = True
+                    col_stats["mean"] = None
+                    col_stats["std"] = None
+                    col_stats["min"] = float(self.df[col].replace([np.inf, -np.inf], np.nan).min())
+                    col_stats["max"] = float(self.df[col].replace([np.inf, -np.inf], np.nan).max())
+                    col_stats["skewness"] = None
+                    col_stats["kurtosis"] = None
+                else:
+                    col_stats["has_infinite"] = False
+                    col_stats["mean"] = float(self.df[col].mean()) if not pd.isna(self.df[col].mean()) else None
+                    col_stats["std"] = float(self.df[col].std()) if not pd.isna(self.df[col].std()) else None
+                    col_stats["min"] = float(self.df[col].min()) if not pd.isna(self.df[col].min()) else None
+                    col_stats["max"] = float(self.df[col].max()) if not pd.isna(self.df[col].max()) else None
+                    col_stats["skewness"] = float(self.df[col].skew()) if not pd.isna(self.df[col].skew()) else None
+                    col_stats["kurtosis"] = float(self.df[col].kurt()) if not pd.isna(self.df[col].kurt()) else None
             
             # Add sample values for categorical columns
             if pd.api.types.is_object_dtype(self.df[col]) or pd.api.types.is_string_dtype(self.df[col]):
@@ -247,24 +302,54 @@ class DataValidator:
         # Ensure score doesn't go below 0
         return max(0, min(100, self.quality_score))
     
-    def check_readiness(self) -> bool:
-        """Check if dataset is ready for analysis"""
-        # Dataset is ready if:
-        # 1. Not empty
-        # 2. No duplicate columns
-        # 3. Not all columns are constant
-        # 4. Has at least some numeric or categorical data
+    def check_readiness(self) -> Dict[str, Any]:
+        """
+        Check if dataset is ready for analysis and provide context
+        """
+        issues_count = len(self._warnings)
+        score = self.calculate_quality_score()
         
         if self.df.empty:
-            return False
-        if self.detect_duplicate_columns():
-            return False
-        if len(self.detect_constant_columns()) == len(self.df.columns):
-            return False
-        if len(self.df.columns) < 2:
-            return False
+            return {
+                "status": "Not Ready",
+                "confidence": 0,
+                "reason": "Dataset is empty"
+            }
         
-        return True
+        if len(self.df.columns) < 2:
+            return {
+                "status": "Not Ready",
+                "confidence": 0,
+                "reason": "Dataset has less than 2 columns"
+            }
+        
+        constant_cols = self.detect_constant_columns()
+        if len(constant_cols) == len(self.df.columns):
+            return {
+                "status": "Not Ready",
+                "confidence": 0,
+                "reason": "All columns are constant"
+            }
+        
+        # Determine readiness based on score
+        if score >= 80:
+            return {
+                "status": "Ready",
+                "confidence": score,
+                "reason": "Dataset is ready for analysis" if issues_count == 0 else "Minor cleaning recommended before analysis."
+            }
+        elif score >= 50:
+            return {
+                "status": "Needs Cleaning",
+                "confidence": score,
+                "reason": f"Significant issues found ({issues_count} warnings). Cleaning recommended."
+            }
+        else:
+            return {
+                "status": "Not Ready",
+                "confidence": score,
+                "reason": f"Major issues found ({issues_count} warnings). Dataset requires substantial cleaning."
+            }
     
     def get_validation_report(self) -> Dict[str, Any]:
         """Generate comprehensive validation report"""
@@ -286,6 +371,9 @@ class DataValidator:
         # Update quality score
         self.quality_score = self.calculate_quality_score()
         
+        # Get readiness
+        readiness = self.check_readiness()
+        
         return {
             "dataset": {
                 "file_name": self.file_name,
@@ -301,7 +389,7 @@ class DataValidator:
                 "constant_columns": constant_columns,
                 "high_missing_columns": high_missing,
                 "infinite_values": infinite_info,
-                "readiness": self.check_readiness()
+                "readiness": readiness
             },
             "profiling": {
                 "id_columns": id_columns,
@@ -314,8 +402,8 @@ class DataValidator:
             },
             "quality": {
                 "quality_score": self.quality_score,
-                "warnings": self.warnings,
-                "total_warnings": len(self.warnings)
+                "warnings": self._get_warnings(),
+                "total_warnings": len(self._get_warnings())
             }
         }
 
