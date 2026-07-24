@@ -12,6 +12,7 @@ import pandas as pd
 from .dataset_inspector import inspect_dataset
 from .validator import validate_dataset
 from .cleaning_engine import generate_cleaning_recommendations
+from .outlier_engine import detect_outliers
 
 
 class UploadService:
@@ -74,15 +75,26 @@ class UploadService:
             # Validate dataset
             validation_report = validate_dataset(df, file.filename)
             
+            # Build shared context for downstream engines
+            context = {
+                "dataframe": df,
+                "validation": validation_report,
+                "profiling": summary
+            }
+            
             # Generate cleaning recommendations
             cleaning_report = generate_cleaning_recommendations(df, validation_report)
+            
+            # Detect outliers
+            outlier_report = detect_outliers(df, context)
             
             # Combine results
             result = {
                 "file_path": file_path,
                 "summary": summary,
                 "validation": validation_report,
-                "cleaning": cleaning_report
+                "cleaning": cleaning_report,
+                "outliers": outlier_report
             }
             
             return result
