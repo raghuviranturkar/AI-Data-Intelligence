@@ -9,16 +9,12 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-*.egg-info/
-dist/
-build/
 
 # Uploads
 backend/uploads/
 *.csv
 *.xlsx
 *.xls
-!datasets/*.csv
 
 # Reports
 backend/reports/
@@ -30,7 +26,6 @@ backend/reports/
 .idea/
 *.swp
 *.swo
-.DS_Store
 
 # OS
 .DS_Store
@@ -43,17 +38,9 @@ logs/
 # Environment
 .env
 .env.local
-.env.*.local
 
-# Jupyter Notebooks
-.ipynb_checkpoints/
-*.ipynb
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Database
-*.db
-*.sqlite
+# Datasets (test data)
+datasets/
+*.csv
+*.xlsx
+*.xls
