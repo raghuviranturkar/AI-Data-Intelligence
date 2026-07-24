@@ -11,6 +11,7 @@ import pandas as pd
 
 from .dataset_inspector import inspect_dataset
 from .validator import validate_dataset
+from .cleaning_engine import generate_cleaning_recommendations
 
 
 class UploadService:
@@ -73,11 +74,15 @@ class UploadService:
             # Validate dataset
             validation_report = validate_dataset(df, file.filename)
             
+            # Generate cleaning recommendations
+            cleaning_report = generate_cleaning_recommendations(df, validation_report)
+            
             # Combine results
             result = {
                 "file_path": file_path,
                 "summary": summary,
-                "validation": validation_report
+                "validation": validation_report,
+                "cleaning": cleaning_report
             }
             
             return result

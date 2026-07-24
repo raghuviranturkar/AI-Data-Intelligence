@@ -67,7 +67,7 @@ async def upload_dataset(file: UploadFile = File(...)):
     Upload and analyze a dataset
     
     Accepts CSV, XLSX, or XLS files.
-    Returns comprehensive dataset analysis including validation.
+    Returns comprehensive dataset analysis including validation and cleaning recommendations.
     """
     logger.info(f"Received file: {file.filename}")
     
@@ -81,7 +81,8 @@ async def upload_dataset(file: UploadFile = File(...)):
             message=f"File {file.filename} processed successfully",
             data={
                 "dataset": result["summary"],
-                "validation": result["validation"]
+                "validation": result["validation"],
+                "cleaning": result["cleaning"]
             }
         )
         
