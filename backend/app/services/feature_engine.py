@@ -1,6 +1,6 @@
 """
 Feature Engineering Engine
-Recommends feature transformations for ML readiness
+Recommends feature transformations for ML readiness with priority and cost
 """
 import pandas as pd
 import numpy as np
@@ -35,9 +35,23 @@ class TransformType(Enum):
     NONE = "none"
 
 
+class Priority(Enum):
+    """Priority levels for feature engineering tasks"""
+    CRITICAL = "critical"
+    RECOMMENDED = "recommended"
+    OPTIONAL = "optional"
+
+
+class Cost(Enum):
+    """Computational cost levels"""
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
 class FeatureEngineeringEngine:
     """
-    Analyzes features and recommends engineering strategies
+    Analyzes features and recommends engineering strategies with priorities and costs
     """
     
     def __init__(self, df: pd.DataFrame, context: Dict[str, Any] = None):
@@ -105,9 +119,60 @@ class FeatureEngineeringEngine:
         
         return roles
     
+    def _get_priority(self, issue_type: str, severity: str = "medium") -> str:
+        """Determine priority level based on issue type and severity"""
+        priority_map = {
+            "infinite_values": Priority.CRITICAL.value,
+            "constant_column": Priority.OPTIONAL.value,
+            "high_missing": Priority.CRITICAL.value,
+            "low_missing": Priority.RECOMMENDED.value,
+            "high_cardinality": Priority.RECOMMENDED.value,
+            "low_cardinality": Priority.OPTIONAL.value,
+            "high_skewness": Priority.RECOMMENDED.value,
+            "moderate_skewness": Priority.OPTIONAL.value,
+            "encoding": Priority.RECOMMENDED.value,
+            "scaling": Priority.RECOMMENDED.value,
+            "interaction": Priority.OPTIONAL.value,
+            "datetime_extraction": Priority.OPTIONAL.value
+        }
+        return priority_map.get(issue_type, Priority.RECOMMENDED.value)
+    
+    def _get_cost(self, operation: str, data_size: int) -> str:
+        """Estimate computational cost of operation"""
+        if data_size > 100000:
+            if operation in ["one_hot", "target_encoding", "interaction"]:
+                return Cost.HIGH.value
+            elif operation in ["scaling", "transform"]:
+                return Cost.MEDIUM.value
+            else:
+                return Cost.LOW.value
+        else:
+            if operation in ["one_hot", "target_encoding"]:
+                return Cost.MEDIUM.value
+            else:
+                return Cost.LOW.value
+    
+    def _get_expected_improvement(self, issue_type: str, severity: str = "medium") -> str:
+        """Estimate expected performance improvement"""
+        improvement_map = {
+            "infinite_values": "Critical - prevents algorithm failure",
+            "constant_column": "Low - removes noise",
+            "high_missing": "High - preserves data quality",
+            "low_missing": "Medium - slight improvement",
+            "high_cardinality": "High - prevents overfitting",
+            "low_cardinality": "Low - minimal impact",
+            "high_skewness": "High - improves model performance",
+            "moderate_skewness": "Medium - moderate improvement",
+            "encoding": "High - enables categorical handling",
+            "scaling": "High - improves convergence",
+            "interaction": "Medium - captures relationships",
+            "datetime_extraction": "Medium - adds time features"
+        }
+        return improvement_map.get(issue_type, "Medium - improves model performance")
+    
     def recommend_encoding(self) -> Dict[str, Any]:
         """
-        Recommend encoding strategies for categorical columns
+        Recommend encoding strategies for categorical columns with priority and cost
         """
         classifications = self.get_column_types()
         categorical_cols = classifications.get('categorical', [])
@@ -115,31 +180,39 @@ class FeatureEngineeringEngine:
         recommendations = {}
         for col in categorical_cols:
             unique_count = self.df[col].nunique()
+            data_size = len(self.df)
             
             if unique_count == 2:
                 strategy = EncodingType.LABEL.value
                 reason = "Binary categorical column - label encoding is appropriate"
+                priority = Priority.RECOMMENDED.value
             elif unique_count <= 10:
                 strategy = EncodingType.ONE_HOT.value
                 reason = f"Low cardinality ({unique_count} categories) - one-hot encoding is suitable"
+                priority = Priority.RECOMMENDED.value
             elif unique_count <= 50:
                 strategy = EncodingType.FREQUENCY.value
                 reason = f"Moderate cardinality ({unique_count} categories) - frequency encoding preserves information"
+                priority = Priority.RECOMMENDED.value
             else:
                 strategy = EncodingType.TARGET.value
                 reason = f"High cardinality ({unique_count} categories) - target encoding is recommended"
+                priority = Priority.CRITICAL.value
             
             recommendations[col] = {
                 "unique_values": unique_count,
                 "recommended_encoding": strategy,
-                "reason": reason
+                "reason": reason,
+                "priority": priority,
+                "cost": self._get_cost(strategy, data_size),
+                "expected_improvement": self._get_expected_improvement("encoding")
             }
         
         return {"encoding_recommendations": recommendations}
     
     def recommend_scaling(self) -> Dict[str, Any]:
         """
-        Recommend scaling strategies for numeric features
+        Recommend scaling strategies for numeric features with priority and cost
         """
         classifications = self.get_column_types()
         numeric_cols = classifications.get('numeric', [])
@@ -161,31 +234,39 @@ class FeatureEngineeringEngine:
             if len(clean_data) < 2:
                 continue
             
+            data_size = len(self.df)
+            
             # Check if column has outliers
             if col in has_outliers:
                 strategy = ScalingType.ROBUST.value
                 reason = "Contains outliers - RobustScaler is recommended"
+                priority = Priority.CRITICAL.value
             else:
                 # Check if distribution is approximately normal
                 skewness = clean_data.skew()
                 if abs(skewness) < 0.5:
                     strategy = ScalingType.STANDARD.value
                     reason = "Approximately normal distribution - StandardScaler is appropriate"
+                    priority = Priority.RECOMMENDED.value
                 else:
                     strategy = ScalingType.MINMAX.value
                     reason = f"Skewed distribution (skewness={skewness:.2f}) - MinMaxScaler may be suitable"
+                    priority = Priority.RECOMMENDED.value
             
             recommendations[col] = {
                 "skewness": round(float(skewness), 3) if not pd.isna(skewness) else None,
                 "recommended_scaling": strategy,
-                "reason": reason
+                "reason": reason,
+                "priority": priority,
+                "cost": self._get_cost("scaling", data_size),
+                "expected_improvement": self._get_expected_improvement("scaling")
             }
         
         return {"scaling_recommendations": recommendations}
     
     def recommend_transformations(self) -> Dict[str, Any]:
         """
-        Recommend transformations for skewed features
+        Recommend transformations for skewed features with priority and cost
         """
         classifications = self.get_column_types()
         numeric_cols = classifications.get('numeric', [])
@@ -201,6 +282,7 @@ class FeatureEngineeringEngine:
             
             # Check for skewness
             skewness = clean_data.skew()
+            data_size = len(self.df)
             
             # Check for negative values (affects log transform)
             has_negative = (clean_data < 0).any()
@@ -209,29 +291,41 @@ class FeatureEngineeringEngine:
             if abs(skewness) < 0.5:
                 strategy = TransformType.NONE.value
                 reason = "Approximately symmetric - no transformation needed"
+                priority = Priority.OPTIONAL.value
             elif skewness > 1:
                 if has_negative or has_zero:
                     strategy = TransformType.YEO_JOHNSON.value
                     reason = f"Positive skewness ({skewness:.2f}) with non-positive values - Yeo-Johnson recommended"
+                    priority = Priority.RECOMMENDED.value
                 else:
                     strategy = TransformType.LOG.value
                     reason = f"Positive skewness ({skewness:.2f}) - log transformation recommended"
+                    priority = Priority.RECOMMENDED.value
             elif skewness < -1:
                 if has_negative or has_zero:
                     strategy = TransformType.YEO_JOHNSON.value
                     reason = f"Negative skewness ({skewness:.2f}) with non-positive values - Yeo-Johnson recommended"
+                    priority = Priority.RECOMMENDED.value
                 else:
                     strategy = TransformType.SQRT.value
                     reason = f"Negative skewness ({skewness:.2f}) - square root transformation may help"
+                    priority = Priority.OPTIONAL.value
             else:
                 strategy = TransformType.NONE.value
                 reason = f"Moderate skewness ({skewness:.2f}) - transformation optional"
+                priority = Priority.OPTIONAL.value
             
-            recommendations[col] = {
-                "skewness": round(float(skewness), 3) if not pd.isna(skewness) else None,
-                "recommended_transform": strategy,
-                "reason": reason
-            }
+            if strategy != TransformType.NONE.value:
+                recommendations[col] = {
+                    "skewness": round(float(skewness), 3) if not pd.isna(skewness) else None,
+                    "recommended_transform": strategy,
+                    "reason": reason,
+                    "priority": priority,
+                    "cost": self._get_cost("transform", data_size),
+                    "expected_improvement": self._get_expected_improvement(
+                        "high_skewness" if abs(skewness) > 1 else "moderate_skewness"
+                    )
+                }
         
         return {"transformation_recommendations": recommendations}
     
@@ -255,7 +349,10 @@ class FeatureEngineeringEngine:
                     "unique_values": 1,
                     "ratio": 1.0,
                     "recommendation": "drop",
-                    "reason": "Constant column - provides no information"
+                    "reason": "Constant column - provides no information",
+                    "priority": Priority.OPTIONAL.value,
+                    "cost": Cost.LOW.value,
+                    "expected_improvement": "Low - removes noise"
                 })
             elif unique_count / total_rows < 0.01:
                 low_variance.append({
@@ -263,7 +360,10 @@ class FeatureEngineeringEngine:
                     "unique_values": unique_count,
                     "ratio": round(unique_count / total_rows, 3),
                     "recommendation": "review",
-                    "reason": "Very low variance - may provide limited information"
+                    "reason": "Very low variance - may provide limited information",
+                    "priority": Priority.OPTIONAL.value,
+                    "cost": Cost.LOW.value,
+                    "expected_improvement": "Low - minimal impact"
                 })
         
         return {"low_variance_features": low_variance}
@@ -286,7 +386,10 @@ class FeatureEngineeringEngine:
                         "feature2": corr['feature_2'],
                         "correlation": corr['correlation'],
                         "suggested_interaction": f"{corr['feature_1']}_x_{corr['feature_2']}",
-                        "reason": "Strongly correlated features may benefit from interaction term"
+                        "reason": "Strongly correlated features may benefit from interaction term",
+                        "priority": Priority.OPTIONAL.value,
+                        "cost": Cost.MEDIUM.value,
+                        "expected_improvement": "Medium - captures relationships"
                     })
         
         return {"interaction_suggestions": interactions}
@@ -314,7 +417,10 @@ class FeatureEngineeringEngine:
                             f"{col}_day",
                             f"{col}_weekday",
                             f"{col}_quarter"
-                        ]
+                        ],
+                        "priority": Priority.OPTIONAL.value,
+                        "cost": Cost.LOW.value,
+                        "expected_improvement": "Medium - adds time features"
                     }
             except:
                 pass
@@ -350,40 +456,55 @@ class FeatureEngineeringEngine:
                         "keep": keep,
                         "remove": remove,
                         "correlation": corr['correlation'],
-                        "reason": f"Highly correlated with '{keep}' (r={corr['correlation']:.2f}) - redundant feature"
+                        "reason": f"Highly correlated with '{keep}' (r={corr['correlation']:.2f}) - redundant feature",
+                        "priority": Priority.RECOMMENDED.value,
+                        "cost": Cost.LOW.value,
+                        "expected_improvement": "High - reduces multicollinearity"
                     })
         
         return {"feature_selection_suggestions": selections}
     
     def generate_preprocessing_pipeline(self) -> Dict[str, Any]:
         """
-        Generate the recommended preprocessing pipeline order
+        Generate the recommended preprocessing pipeline order with priorities
         """
         pipeline_steps = [
-            {"step": "Handle Missing Values", "details": "Impute or remove missing values"},
-            {"step": "Replace Infinite Values", "details": "Replace inf/-inf with NaN or impute"},
-            {"step": "Drop Constant Columns", "details": "Remove columns with no variance"},
-            {"step": "Encode Categorical Features", "details": "Convert categorical to numeric"},
-            {"step": "Scale Numeric Features", "details": "Normalize/standardize numeric features"},
-            {"step": "Transform Skewed Features", "details": "Apply transformations for normality"},
-            {"step": "Create Interaction Features", "details": "Combine correlated features"},
-            {"step": "Extract Datetime Features", "details": "Decompose datetime into components"},
-            {"step": "Select Final Features", "details": "Remove redundant or low-value features"}
+            {"step": "Handle Missing Values", "details": "Impute or remove missing values", 
+             "priority": Priority.CRITICAL.value},
+            {"step": "Replace Infinite Values", "details": "Replace inf/-inf with NaN or impute",
+             "priority": Priority.CRITICAL.value},
+            {"step": "Drop Constant Columns", "details": "Remove columns with no variance",
+             "priority": Priority.OPTIONAL.value},
+            {"step": "Encode Categorical Features", "details": "Convert categorical to numeric",
+             "priority": Priority.RECOMMENDED.value},
+            {"step": "Scale Numeric Features", "details": "Normalize/standardize numeric features",
+             "priority": Priority.RECOMMENDED.value},
+            {"step": "Transform Skewed Features", "details": "Apply transformations for normality",
+             "priority": Priority.RECOMMENDED.value},
+            {"step": "Create Interaction Features", "details": "Combine correlated features",
+             "priority": Priority.OPTIONAL.value},
+            {"step": "Extract Datetime Features", "details": "Decompose datetime into components",
+             "priority": Priority.OPTIONAL.value},
+            {"step": "Select Final Features", "details": "Remove redundant or low-value features",
+             "priority": Priority.RECOMMENDED.value}
         ]
         
         return {"preprocessing_pipeline": pipeline_steps}
     
     def calculate_ml_readiness(self) -> Dict[str, Any]:
         """
-        Calculate ML readiness score
+        Calculate ML readiness score with detailed breakdown
         """
         score = 100
         issues = []
+        critical_issues = []
         
         # Check for missing values
         missing_cols = [col for col in self.df.columns if self.df[col].isnull().any()]
         if missing_cols:
             score -= len(missing_cols) * 5
+            if len(missing_cols) > 5:
+                critical_issues.append(f"{len(missing_cols)} columns have missing values - critical")
             issues.append(f"{len(missing_cols)} columns have missing values")
         
         # Check for categorical columns
@@ -398,9 +519,24 @@ class FeatureEngineeringEngine:
             if col == self.target_column:
                 continue
             skewness = self.df[col].skew()
-            if abs(skewness) > 1:
+            if abs(skewness) > 2:
+                critical_issues.append(f"'{col}' is highly skewed (skewness={skewness:.2f}) - critical")
+                score -= 5
+            elif abs(skewness) > 1:
                 score -= 2
                 issues.append(f"'{col}' is skewed (skewness={skewness:.2f})")
+        
+        # Check for infinite values
+        for col in self.df.select_dtypes(include=[np.number]).columns:
+            if np.isinf(self.df[col]).any():
+                critical_issues.append(f"'{col}' contains infinite values - critical")
+                score -= 10
+        
+        # Check for constant columns
+        for col in self.df.columns:
+            if self.df[col].nunique() == 1:
+                score -= 2
+                issues.append(f"'{col}' is constant - no predictive value")
         
         # Determine status
         if score >= 80:
@@ -417,26 +553,52 @@ class FeatureEngineeringEngine:
             "score": max(0, score),
             "status": status,
             "recommendation": recommendation,
-            "issues": issues[:5],  # Limit to 5 issues
-            "issue_count": len(issues)
+            "issues": issues[:5],
+            "critical_issues": critical_issues[:3],
+            "issue_count": len(issues),
+            "critical_count": len(critical_issues)
         }
     
     def generate_summary(self) -> Dict[str, Any]:
         """
-        Generate feature engineering summary
+        Generate feature engineering summary with priority breakdown
         """
         encoding_recs = self.recommend_encoding()
         scaling_recs = self.recommend_scaling()
         transform_recs = self.recommend_transformations()
         low_variance = self.detect_low_variance_features()
         
+        # Count by priority
+        priority_counts = {"critical": 0, "recommended": 0, "optional": 0}
+        
+        for rec in encoding_recs.get('encoding_recommendations', {}).values():
+            priority_counts[rec.get('priority', 'recommended')] += 1
+        for rec in scaling_recs.get('scaling_recommendations', {}).values():
+            priority_counts[rec.get('priority', 'recommended')] += 1
+        for rec in transform_recs.get('transformation_recommendations', {}).values():
+            priority_counts[rec.get('priority', 'recommended')] += 1
+        for item in low_variance.get('low_variance_features', []):
+            priority_counts[item.get('priority', 'optional')] += 1
+        
+        # Count by cost
+        cost_counts = {"low": 0, "medium": 0, "high": 0}
+        
+        for rec in encoding_recs.get('encoding_recommendations', {}).values():
+            cost_counts[rec.get('cost', 'low')] += 1
+        for rec in scaling_recs.get('scaling_recommendations', {}).values():
+            cost_counts[rec.get('cost', 'low')] += 1
+        for rec in transform_recs.get('transformation_recommendations', {}).values():
+            cost_counts[rec.get('cost', 'low')] += 1
+        
         return {
             "encoding_required": len(encoding_recs.get('encoding_recommendations', {})),
             "scaling_required": len(scaling_recs.get('scaling_recommendations', {})),
             "transform_required": len(transform_recs.get('transformation_recommendations', {})),
             "drop_candidates": len(low_variance.get('low_variance_features', [])),
+            "priority_breakdown": priority_counts,
+            "cost_breakdown": cost_counts,
             "estimated_features_after_engineering": len(self.df.columns) + 
-                len(encoding_recs.get('encoding_recommendations', {})) * 2  # Rough estimate
+                len(encoding_recs.get('encoding_recommendations', {})) * 2
         }
     
     def analyze_all(self) -> Dict[str, Any]:
