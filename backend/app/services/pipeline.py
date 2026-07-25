@@ -238,3 +238,18 @@ def load_pipeline_artifacts(path: str = "artifacts") -> Dict[str, Any]:
         print(f"⚠️ No feature engineering artifacts found at {path}/")
     
     return artifacts
+
+
+def generate_report(context: Dict[str, Any], output_path: str = "report.pdf") -> str:
+    """
+    Generate a PDF report from pipeline context
+    
+    Args:
+        context: Complete pipeline context
+        output_path: Path to save the PDF
+        
+    Returns:
+        Path to generated PDF
+    """
+    from .reports import generate_pdf_report
+    return generate_pdf_report(context, output_path)
