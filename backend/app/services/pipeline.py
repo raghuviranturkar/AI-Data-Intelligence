@@ -14,6 +14,7 @@ from .eda_engine import perform_eda
 from .feature_engine import engineer_features
 from .automl import run_automl
 from .explainability import run_explainability
+from .insights import generate_insights
 
 
 class DataIntelligencePipeline:
@@ -31,7 +32,9 @@ class DataIntelligencePipeline:
         self._is_frozen = False
     
     def run(self, df: pd.DataFrame, file_name: str = "unknown", 
-            include_automl: bool = True) -> Dict[str, Any]:
+            include_automl: bool = True,
+            include_explainability: bool = True,
+            include_insights: bool = True) -> Dict[str, Any]:
         """
         Run the complete data intelligence pipeline
         
@@ -39,6 +42,8 @@ class DataIntelligencePipeline:
             df: Pandas DataFrame to analyze
             file_name: Name of the original file
             include_automl: Whether to run AutoML
+            include_explainability: Whether to run Explainability
+            include_insights: Whether to run AI Insights
             
         Returns:
             Complete analysis results (frozen context)
@@ -85,6 +90,18 @@ class DataIntelligencePipeline:
             self.results["automl"] = self._run_automl()
             self.context["automl"] = self.results["automl"]
         
+        # Step 8: Explainability
+        if include_explainability and include_automl:
+            print("🔍 Running Explainability...")
+            self.results["explainability"] = self._run_explainability()
+            self.context["explainability"] = self.results["explainability"]
+        
+        # Step 9: AI Insights
+        if include_insights and include_automl:
+            print("💡 Running AI Insights...")
+            self.results["insights"] = self._run_insights()
+            self.context["insights"] = self.results["insights"]
+        
         # Freeze the pipeline
         self._is_frozen = True
         print("✅ Pipeline complete! Context frozen for downstream modules.")
@@ -92,23 +109,13 @@ class DataIntelligencePipeline:
         return self.results
     
     def get_context(self) -> Dict[str, Any]:
-        """
-        Get the frozen pipeline context for downstream modules
-        
-        Returns:
-            Frozen context dictionary
-        """
+        """Get the frozen pipeline context"""
         if not self._is_frozen:
             raise RuntimeError("Pipeline must be run before accessing context")
         return self.context
     
     def get_ml_ready_data(self) -> pd.DataFrame:
-        """
-        Get the ML-ready dataset (after all transformations)
-        
-        Returns:
-            Processed DataFrame
-        """
+        """Get the ML-ready dataset"""
         if not self._is_frozen:
             raise RuntimeError("Pipeline must be run before accessing ML-ready data")
         return self.context.get("dataframe", pd.DataFrame())
@@ -160,10 +167,20 @@ class DataIntelligencePipeline:
     def _run_automl(self) -> Dict[str, Any]:
         """Run AutoML"""
         return run_automl(self.context)
+    
+    def _run_explainability(self) -> Dict[str, Any]:
+        """Run Explainability"""
+        return run_explainability(self.context)
+    
+    def _run_insights(self) -> Dict[str, Any]:
+        """Run AI Insights"""
+        return generate_insights(self.context)
 
 
 def run_pipeline(df: pd.DataFrame, file_name: str = "unknown", 
-                 include_automl: bool = True) -> Dict[str, Any]:
+                 include_automl: bool = True,
+                 include_explainability: bool = True,
+                 include_insights: bool = True) -> Dict[str, Any]:
     """
     Convenience function to run the complete pipeline
     
@@ -171,24 +188,11 @@ def run_pipeline(df: pd.DataFrame, file_name: str = "unknown",
         df: Pandas DataFrame
         file_name: Name of the original file
         include_automl: Whether to run AutoML
+        include_explainability: Whether to run Explainability
+        include_insights: Whether to run AI Insights
         
     Returns:
         Complete analysis results
     """
     pipeline = DataIntelligencePipeline()
-    return pipeline.run(df, file_name, include_automl)
-
-
-def run_explainability(context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convenience function to run explainability
-    
-    Args:
-        context: Frozen pipeline context
-        
-    Returns:
-        Explainability results
-    """
-    from .explainability import ExplainabilityEngine
-    engine = ExplainabilityEngine(context)
-    return engine.run()
+    return pipeline.run(df, file_name, include_automl, include_explainability, include_insights)
