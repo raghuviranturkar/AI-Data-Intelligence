@@ -13,6 +13,7 @@ from .outlier_engine import detect_outliers
 from .eda_engine import perform_eda
 from .feature_engine import engineer_features
 from .automl import run_automl
+from .explainability import run_explainability
 
 
 class DataIntelligencePipeline:
@@ -176,3 +177,18 @@ def run_pipeline(df: pd.DataFrame, file_name: str = "unknown",
     """
     pipeline = DataIntelligencePipeline()
     return pipeline.run(df, file_name, include_automl)
+
+
+def run_explainability(context: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convenience function to run explainability
+    
+    Args:
+        context: Frozen pipeline context
+        
+    Returns:
+        Explainability results
+    """
+    from .explainability import ExplainabilityEngine
+    engine = ExplainabilityEngine(context)
+    return engine.run()
