@@ -5,6 +5,8 @@ Coordinates all analysis engines and maintains shared context
 import pandas as pd
 import numpy as np
 from typing import Dict, Any
+import joblib
+import os
 
 from .dataset_inspector import inspect_dataset
 from .validator import validate_dataset
@@ -21,9 +23,6 @@ class DataIntelligencePipeline:
     """
     Orchestrates the complete data intelligence pipeline
     Maintains shared context across all engines
-    
-    The pipeline context is frozen after execution and can be consumed
-    by downstream modules (AutoML, SHAP, PDF, AI Chat, etc.)
     """
     
     def __init__(self):
@@ -37,26 +36,18 @@ class DataIntelligencePipeline:
             include_insights: bool = True) -> Dict[str, Any]:
         """
         Run the complete data intelligence pipeline
-        
-        Args:
-            df: Pandas DataFrame to analyze
-            file_name: Name of the original file
-            include_automl: Whether to run AutoML
-            include_explainability: Whether to run Explainability
-            include_insights: Whether to run AI Insights
-            
-        Returns:
-            Complete analysis results (frozen context)
         """
         # Step 1: Dataset Inspection
         print("🔍 Running dataset inspection...")
         self.results["dataset"] = self._inspect_dataset(df, file_name)
         
-        # Build shared context
+        # Build shared context with proper dataset info
         self.context = {
             "dataframe": df,
             "file_name": file_name,
-            "profiling": self.results["dataset"]
+            "dataset": self.results["dataset"],
+            "profiling": self.results["dataset"],
+            "preprocessing": {}  # Store preprocessing objects
         }
         
         # Step 2: Validation
@@ -89,6 +80,20 @@ class DataIntelligencePipeline:
             print("🤖 Running AutoML...")
             self.results["automl"] = self._run_automl()
             self.context["automl"] = self.results["automl"]
+            
+            # Store preprocessing objects from AutoML
+            if "preprocessor" in self.results["automl"]:
+                self.context["preprocessing"]["scaler"] = self.results["automl"]["preprocessor"]
+            if "feature_names" in self.results["automl"]:
+                self.context["preprocessing"]["feature_names"] = self.results["automl"]["feature_names"]
+            
+            # Store trained models
+            if "trained_models" in self.results["automl"]:
+                self.context["preprocessing"]["trained_models"] = self.results["automl"]["trained_models"]
+                
+            # Store best model
+            if "best_model" in self.results["automl"]:
+                self.context["preprocessing"]["best_model"] = self.results["automl"]["best_model"]
         
         # Step 8: Explainability
         if include_explainability and include_automl:
@@ -119,6 +124,27 @@ class DataIntelligencePipeline:
         if not self._is_frozen:
             raise RuntimeError("Pipeline must be run before accessing ML-ready data")
         return self.context.get("dataframe", pd.DataFrame())
+    
+    def get_preprocessing_objects(self) -> Dict[str, Any]:
+        """Get preprocessing objects for inference"""
+        if not self._is_frozen:
+            raise RuntimeError("Pipeline must be run before accessing preprocessing objects")
+        return self.context.get("preprocessing", {})
+    
+    def save_artifacts(self, path: str = "artifacts"):
+        """Save pipeline artifacts to disk"""
+        if not self._is_frozen:
+            raise RuntimeError("Pipeline must be run before saving artifacts")
+        
+        os.makedirs(path, exist_ok=True)
+        
+        # Save preprocessing objects
+        joblib.dump(self.context.get("preprocessing", {}), f"{path}/preprocessing.joblib")
+        
+        # Save feature engineering
+        joblib.dump(self.context.get("feature_engineering", {}), f"{path}/feature_engineering.joblib")
+        
+        print(f"✅ Artifacts saved to {path}/")
     
     def _inspect_dataset(self, df: pd.DataFrame, file_name: str) -> Dict[str, Any]:
         """Run dataset inspection"""
@@ -183,16 +209,32 @@ def run_pipeline(df: pd.DataFrame, file_name: str = "unknown",
                  include_insights: bool = True) -> Dict[str, Any]:
     """
     Convenience function to run the complete pipeline
-    
-    Args:
-        df: Pandas DataFrame
-        file_name: Name of the original file
-        include_automl: Whether to run AutoML
-        include_explainability: Whether to run Explainability
-        include_insights: Whether to run AI Insights
-        
-    Returns:
-        Complete analysis results
     """
     pipeline = DataIntelligencePipeline()
     return pipeline.run(df, file_name, include_automl, include_explainability, include_insights)
+
+
+def load_pipeline_artifacts(path: str = "artifacts") -> Dict[str, Any]:
+    """
+    Load saved pipeline artifacts
+    
+    Args:
+        path: Path to artifacts directory
+        
+    Returns:
+        Loaded artifacts
+    """
+    import joblib
+    artifacts = {}
+    
+    try:
+        artifacts["preprocessing"] = joblib.load(f"{path}/preprocessing.joblib")
+    except:
+        print(f"⚠️ No preprocessing artifacts found at {path}/")
+    
+    try:
+        artifacts["feature_engineering"] = joblib.load(f"{path}/feature_engineering.joblib")
+    except:
+        print(f"⚠️ No feature engineering artifacts found at {path}/")
+    
+    return artifacts

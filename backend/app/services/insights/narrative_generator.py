@@ -18,111 +18,68 @@ class NarrativeGenerator:
         self.context = context
         
     def generate_executive_summary(self) -> str:
-        """Generate executive summary"""
+        """Generate executive summary - FIXED to use correct data"""
         parts = []
         
-        # Dataset overview
-        dataset_summary = self._get_dataset_summary()
-        parts.append(dataset_summary)
-        
-        # Quality assessment
-        quality_assessment = self._get_quality_assessment()
-        if quality_assessment:
-            parts.append(quality_assessment)
-        
-        # Model performance
-        model_summary = self._get_model_summary()
-        if model_summary:
-            parts.append(model_summary)
-        
-        # Key insights
-        key_insights = self._get_key_insights()
-        if key_insights:
-            parts.append(key_insights)
-        
-        # Recommendation
-        recommendation = self._get_recommendation()
-        if recommendation:
-            parts.append(recommendation)
-        
-        return " ".join(parts)
-    
-    def _get_dataset_summary(self) -> str:
-        """Get dataset summary"""
+        # Dataset overview - FIXED to read from correct location
         dataset = self.context.get('dataset', {})
         shape = dataset.get('shape', {})
         rows = shape.get('rows', 0)
         cols = shape.get('columns', 0)
+        parts.append(f"The dataset contains {rows} rows and {cols} columns.")
         
-        return f"The dataset contains {rows} rows and {cols} columns."
-    
-    def _get_quality_assessment(self) -> str:
-        """Get quality assessment"""
+        # Quality assessment
         validation = self.context.get('validation', {})
         quality = validation.get('quality', {})
         score = quality.get('quality_score', 0)
         
         if score >= 90:
-            return "Data quality is excellent with minimal issues."
+            parts.append("Data quality is excellent with minimal issues.")
         elif score >= 70:
-            return "Data quality is good with some minor issues to address."
+            parts.append("Data quality is good with some minor issues to address.")
         elif score >= 50:
-            return "Data quality requires attention. Several issues identified."
+            parts.append("Data quality requires attention. Several issues identified.")
         else:
-            return "Data quality needs significant improvement before analysis."
-    
-    def _get_model_summary(self) -> str:
-        """Get model summary"""
+            parts.append("Data quality needs significant improvement before analysis.")
+        
+        # Model performance - FIXED to use correct best model
         automl = self.context.get('automl', {})
         best = automl.get('best_model', {})
         
-        if not best:
-            return "Model training not yet performed."
+        if best:
+            name = best.get('name', 'Unknown')
+            score_val = best.get('score', 0)
+            
+            if score_val >= 0.9:
+                performance = "excellent"
+            elif score_val >= 0.7:
+                performance = "good"
+            elif score_val >= 0.5:
+                performance = "moderate"
+            else:
+                performance = "below expectations"
+            
+            parts.append(f"The {name} model achieved {performance} performance (score: {score_val:.3f}).")
         
-        name = best.get('name', 'Unknown')
-        score = best.get('score', 0)
-        
-        if score >= 0.9:
-            performance = "excellent"
-        elif score >= 0.7:
-            performance = "good"
-        elif score >= 0.5:
-            performance = "moderate"
-        else:
-            performance = "below expectations"
-        
-        return f"The {name} model achieved {performance} performance (score: {score:.3f})."
-    
-    def _get_key_insights(self) -> str:
-        """Get key insights"""
+        # Key insights
         explainability = self.context.get('explainability', {})
         importance = explainability.get('feature_importance', {})
         
-        if not importance:
-            return "No key insights available."
+        if importance:
+            sorted_importance = sorted(importance.items(), key=lambda x: x[1], reverse=True)
+            top_features = sorted_importance[:3]
+            
+            if top_features:
+                feature_names = [f[0] for f in top_features]
+                parts.append(f"Key drivers: {', '.join(feature_names)} strongly influence predictions.")
         
-        sorted_importance = sorted(importance.items(), key=lambda x: x[1], reverse=True)
-        top_features = sorted_importance[:3]
-        
-        if top_features:
-            feature_names = [f[0] for f in top_features]
-            return f"Key drivers: {', '.join(feature_names)} strongly influence predictions."
-        
-        return "Feature importance analysis not available."
-    
-    def _get_recommendation(self) -> str:
-        """Get recommendation"""
-        recommendations = self._get_recommendations()
-        
-        if not recommendations:
-            return "Continue monitoring and improving the dataset."
-        
-        return f"Recommendations: {recommendations[0]}"
-    
-    def _get_recommendations(self) -> List[str]:
-        """Get recommendations from context"""
+        # Recommendation
         insights = self.context.get('insights', {})
-        return insights.get('recommendations', [])
+        recommendations = insights.get('recommendations', [])
+        if recommendations:
+            parts.append(f"Recommendations: {recommendations[0]}")
+        
+        return " ".join(parts)
     
     def generate_full_report(self) -> Dict[str, str]:
         """Generate full narrative report"""
@@ -138,7 +95,7 @@ class NarrativeGenerator:
         }
     
     def _generate_dataset_overview(self) -> str:
-        """Generate dataset overview"""
+        """Generate dataset overview - FIXED"""
         dataset = self.context.get('dataset', {})
         shape = dataset.get('shape', {})
         rows = shape.get('rows', 0)
@@ -177,12 +134,12 @@ class NarrativeGenerator:
         return text
     
     def _generate_model_section(self) -> str:
-        """Generate model section"""
+        """Generate model section - FIXED"""
         automl = self.context.get('automl', {})
         best = automl.get('best_model', {})
         models_trained = automl.get('models_trained', 0)
         
-        if not best:
+        if not best or not best.get('name'):
             return "No models were trained."
         
         text = f"Trained {models_trained} models. "

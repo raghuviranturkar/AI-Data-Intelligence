@@ -38,12 +38,14 @@ class RecommendationEngine:
         if feature_count < 5:
             recommendations.append("Consider collecting more features to improve model performance.")
         
-        # Model recommendations
+        # Model recommendations - FIXED to use the actual best model
         best_model = self._get_best_model()
         if best_model:
             recommendations.append(
                 f"Deploy the {best_model} model to production after validation."
             )
+        else:
+            recommendations.append("Train models to identify the best performing algorithm.")
         
         # SHAP recommendation
         if not self._is_shap_available():
@@ -75,10 +77,20 @@ class RecommendationEngine:
         return len([col for col, role in roles.items() if role == 'feature'])
     
     def _get_best_model(self) -> str:
-        """Get best model name"""
+        """Get best model name - FIXED to read from automl results"""
         automl = self.context.get('automl', {})
         best = automl.get('best_model', {})
-        return best.get('name', '')
+        
+        # Get the model name from the best_model dict
+        model_name = best.get('name', '')
+        
+        # If no best model found, check ranked models
+        if not model_name:
+            ranked = automl.get('ranked_models', [])
+            if ranked:
+                model_name = ranked[0].get('model_name', '')
+        
+        return model_name
     
     def _is_shap_available(self) -> bool:
         """Check if SHAP is available"""
@@ -93,11 +105,11 @@ class RecommendationEngine:
             next_steps.append("1. Clean the dataset")
             next_steps.append("2. Address missing values")
         
-        if not self._get_best_model():
+        best_model = self._get_best_model()
+        if not best_model:
             next_steps.append("1. Train models")
             next_steps.append("2. Evaluate performance")
-        
-        if self._get_best_model():
+        else:
             next_steps.append("1. Validate model on test data")
             next_steps.append("2. Deploy to production")
         

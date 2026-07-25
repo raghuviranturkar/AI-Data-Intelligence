@@ -58,18 +58,41 @@ class BusinessRules:
     
     @staticmethod
     def get_model_insight(automl_results: Dict[str, Any]) -> List[str]:
-        """Generate model insights"""
+        """Generate model insights - FIXED to use correct best model"""
         insights = []
         
         if not automl_results:
             return ["No model training results available."]
         
+        # Get best model - FIXED to read from correct location
         best_model = automl_results.get('best_model', {})
-        if best_model:
+        model_name = best_model.get('name', 'Unknown')
+        model_score = best_model.get('score', 0)
+        
+        if model_name != 'Unknown' and model_score > 0:
+            # Determine performance level
+            if model_score >= 0.9:
+                performance = "excellent"
+            elif model_score >= 0.7:
+                performance = "good"
+            elif model_score >= 0.5:
+                performance = "moderate"
+            else:
+                performance = "below expectations"
+            
             insights.append(
-                f"Best performing model: {best_model.get('name', 'Unknown')} "
-                f"(score: {best_model.get('score', 0):.3f})."
+                f"Best performing model: {model_name} "
+                f"with {performance} performance (score: {model_score:.3f})."
             )
+        else:
+            # Try to get from ranked models
+            ranked = automl_results.get('ranked_models', [])
+            if ranked:
+                top_model = ranked[0]
+                insights.append(
+                    f"Top ranked model: {top_model.get('model_name', 'Unknown')} "
+                    f"(score: {top_model.get('score', 0):.3f})."
+                )
         
         models_trained = automl_results.get('models_trained', 0)
         if models_trained > 0:
@@ -117,11 +140,14 @@ class BusinessRules:
         if warnings and len(warnings) > 5:
             risks.append(f"Multiple warnings ({len(warnings)}) indicate potential data quality issues.")
         
-        # Model risks
+        # Model risks - FIXED to use correct best model
         best_model = automl_results.get('best_model', {})
         score = best_model.get('score', 0)
-        if score < 0.7:
+        if score < 0.6 and score > 0:
             risks.append("Model performance is below acceptable threshold.")
+        elif score == 0:
+            # No model found
+            risks.append("No model has been trained yet. Train models to assess performance.")
         
         # Check for critical warnings
         for warning in warnings:
@@ -144,6 +170,11 @@ class BusinessRules:
             models_trained = automl_results.get('models_trained', 0)
             if models_trained > 0:
                 strengths.append(f"Successfully trained {models_trained} models.")
+                
+                # Check if we have a best model
+                best_model = automl_results.get('best_model', {})
+                if best_model.get('name'):
+                    strengths.append(f"Best model identified: {best_model.get('name')}.")
         
         strengths.append("Complete data pipeline established.")
         strengths.append("Automated analysis workflow in place.")
@@ -170,7 +201,9 @@ class BusinessRules:
         # Check if model performance is low
         best_model = automl_results.get('best_model', {})
         score = best_model.get('score', 0)
-        if score < 0.7:
+        if score < 0.7 and score > 0:
             weaknesses.append("Model performance is below desired threshold.")
+        elif score == 0:
+            weaknesses.append("No model has been trained yet.")
         
         return weaknesses
