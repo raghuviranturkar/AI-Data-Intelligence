@@ -17,18 +17,21 @@ class MetricsCalculator:
     @staticmethod
     def calculate_classification_metrics(y_true: np.ndarray, 
                                         y_pred: np.ndarray,
-                                        y_proba: Optional[np.ndarray] = None) -> Dict[str, Any]:
+                                        y_proba: Optional[np.ndarray] = None,
+                                        labels: Optional[List] = None) -> Dict[str, Any]:
         """
-        Calculate classification metrics
+        Calculate classification metrics including confusion matrix and detailed report
         
         Args:
             y_true: True labels
             y_pred: Predicted labels
             y_proba: Predicted probabilities (for ROC AUC)
+            labels: List of class labels
             
         Returns:
             Dictionary of metrics
         """
+        # Basic metrics
         metrics = {
             "accuracy": round(accuracy_score(y_true, y_pred), 4),
             "precision": round(precision_score(y_true, y_pred, average='weighted', zero_division=0), 4),
@@ -36,7 +39,25 @@ class MetricsCalculator:
             "f1": round(f1_score(y_true, y_pred, average='weighted', zero_division=0), 4)
         }
         
-        # Add ROC AUC if probabilities are available
+        # Confusion Matrix
+        cm = confusion_matrix(y_true, y_pred)
+        metrics["confusion_matrix"] = cm.tolist()
+        
+        # Extract TP, FP, TN, FN for binary classification
+        if cm.shape == (2, 2):
+            tn, fp, fn, tp = cm.ravel()
+            metrics["confusion_matrix_details"] = {
+                "true_positive": int(tp),
+                "true_negative": int(tn),
+                "false_positive": int(fp),
+                "false_negative": int(fn)
+            }
+        
+        # Classification Report (per class)
+        report = classification_report(y_true, y_pred, output_dict=True, zero_division=0)
+        metrics["classification_report"] = report
+        
+        # ROC AUC if probabilities are available
         if y_proba is not None:
             try:
                 if len(np.unique(y_true)) == 2:  # Binary classification
@@ -45,10 +66,6 @@ class MetricsCalculator:
                     metrics["roc_auc"] = round(roc_auc_score(y_true, y_proba, multi_class='ovr'), 4)
             except:
                 metrics["roc_auc"] = None
-        
-        # Add confusion matrix
-        cm = confusion_matrix(y_true, y_pred)
-        metrics["confusion_matrix"] = cm.tolist()
         
         return metrics
     

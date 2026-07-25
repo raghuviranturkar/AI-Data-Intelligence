@@ -45,10 +45,15 @@ class ModelEvaluator:
             except:
                 pass
         
+        # Get class labels if available
+        labels = None
+        if hasattr(model, "classes_"):
+            labels = model.classes_.tolist()
+        
         # Calculate metrics based on problem type
         if "classification" in problem_type:
             metrics = self.metrics_calculator.calculate_classification_metrics(
-                y_test, y_pred, y_proba
+                y_test, y_pred, y_proba, labels
             )
         else:  # Regression
             metrics = self.metrics_calculator.calculate_regression_metrics(
