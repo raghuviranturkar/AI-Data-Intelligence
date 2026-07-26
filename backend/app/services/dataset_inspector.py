@@ -35,6 +35,9 @@ class DatasetInspector:
         if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
             return int(obj)
         elif isinstance(obj, (np.float64, np.float32, np.float16)):
+            # Handle infinite values
+            if np.isinf(obj):
+                return None
             return float(obj)
         elif isinstance(obj, np.bool_):
             return bool(obj)
@@ -90,6 +93,9 @@ class DatasetInspector:
         
         if numeric_df.empty:
             return {"message": "No numeric columns found"}
+        
+        # Replace inf with NaN for statistics
+        numeric_df = numeric_df.replace([np.inf, -np.inf], np.nan)
         
         stats = {
             "count": numeric_df.count().to_dict(),

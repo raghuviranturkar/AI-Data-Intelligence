@@ -3,7 +3,7 @@ FastAPI Application Entry Point
 """
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, PlainTextResponse
 import logging
 import json
 
@@ -14,7 +14,7 @@ from app.utils.json_encoder import NumpyJSONEncoder
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    format='%(asctime)s - %(app)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
@@ -66,25 +66,18 @@ async def health_check():
     }
 )
 async def upload_dataset(file: UploadFile = File(...)):
-    """
-    Upload and analyze a dataset
-    
-    Accepts CSV, XLSX, or XLS files.
-    Returns comprehensive dataset analysis.
-    """
+    """Upload and analyze a dataset"""
     logger.info(f"Received file: {file.filename}")
     
     try:
         result = await upload_service.process_upload(file)
         
-        # Convert response to JSON with custom encoder
         response_data = {
             "status": "success",
             "message": f"File {file.filename} processed successfully",
             "data": result
         }
         
-        # Use custom JSON encoder to handle numpy types
         json_str = json.dumps(response_data, cls=NumpyJSONEncoder)
         return JSONResponse(content=json.loads(json_str))
         
@@ -102,6 +95,33 @@ async def upload_dataset(file: UploadFile = File(...)):
             status_code=500,
             detail=str(e)
         )
+
+
+@app.get("/reports/pdf")
+async def download_pdf_report():
+    """Download PDF report"""
+    from app.services.reports.pdf_generator import generate_pdf_report
+    context = {"dataset": {"file_name": "sample.csv", "shape": {"rows": 100, "columns": 5}}}
+    pdf_path = generate_pdf_report(context, "report.pdf")
+    return FileResponse(pdf_path, media_type='application/pdf', filename='report.pdf')
+
+
+@app.get("/reports/html")
+async def download_html_report():
+    """Download HTML report"""
+    from app.services.reports.pdf_generator import generate_html_report
+    context = {"dataset": {"file_name": "sample.csv", "shape": {"rows": 100, "columns": 5}}}
+    html_content = generate_html_report(context)
+    return HTMLResponse(content=html_content)
+
+
+@app.get("/reports/md")
+async def download_markdown_report():
+    """Download Markdown report"""
+    from app.services.reports.pdf_generator import generate_markdown_report
+    context = {"dataset": {"file_name": "sample.csv", "shape": {"rows": 100, "columns": 5}}}
+    md_content = generate_markdown_report(context)
+    return PlainTextResponse(content=md_content)
 
 
 if __name__ == "__main__":

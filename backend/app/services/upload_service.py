@@ -9,6 +9,7 @@ from datetime import datetime
 from fastapi import UploadFile
 import pandas as pd
 import json
+import traceback
 
 from .pipeline import run_pipeline
 from ..utils.json_encoder import NumpyJSONEncoder
@@ -51,12 +52,21 @@ class UploadService:
         # Process through pipeline
         try:
             # Load dataset
+            print(f"📊 Loading file: {file.filename}")
             if file_extension == '.csv':
                 df = pd.read_csv(file_path)
             else:
                 df = pd.read_excel(file_path)
             
             print(f"📊 Loaded dataset: {len(df)} rows, {len(df.columns)} columns")
+            
+            # Check if dataset is too small
+            if len(df) < 2:
+                raise ValueError(f"Dataset has only {len(df)} rows. Minimum 2 rows required for analysis.")
+            
+            # Check for required columns
+            if len(df.columns) < 2:
+                raise ValueError(f"Dataset has only {len(df.columns)} columns. Minimum 2 columns required.")
             
             # Run pipeline
             results = run_pipeline(df, file.filename)
@@ -67,11 +77,17 @@ class UploadService:
             print("✅ Pipeline complete!")
             return results
             
+        except ValueError as e:
+            # Clean up file
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            print(f"❌ Validation Error: {str(e)}")
+            raise ValueError(str(e))
+            
         except Exception as e:
             # Clean up file if processing fails
             if os.path.exists(file_path):
                 os.remove(file_path)
-            print(f"❌ Error: {str(e)}")
-            import traceback
-            traceback.print_exc()
+            print(f"❌ Error processing dataset: {str(e)}")
+            print(traceback.format_exc())
             raise Exception(f"Error processing dataset: {str(e)}")

@@ -1,11 +1,8 @@
 """
-AutoML Engine
-Orchestrates the complete AutoML pipeline
+AutoML Engine - Handles infinite values properly
 """
 import numpy as np
 import pandas as pd
-import pickle
-import joblib
 from typing import Dict, Any, List, Optional
 from sklearn.preprocessing import LabelEncoder, StandardScaler, RobustScaler, MinMaxScaler
 from sklearn.model_selection import train_test_split
@@ -21,18 +18,9 @@ from .metrics import MetricsCalculator
 
 
 class AutoMLEngine:
-    """
-    AutoML Engine that trains and compares multiple models
-    Consumes the frozen pipeline context
-    """
+    """AutoML Engine with infinite value handling"""
     
     def __init__(self, context: Dict[str, Any]):
-        """
-        Initialize AutoML engine with pipeline context
-        
-        Args:
-            context: Frozen pipeline context from DataIntelligencePipeline
-        """
         self.context = context
         self.df = context.get("dataframe", pd.DataFrame())
         self.target_column = None
@@ -43,71 +31,35 @@ class AutoMLEngine:
         self.ranker = ModelRanker()
         self.results = {}
         self.random_seed = 42
-        self.trained_models = {}  # Store trained models
-        self.preprocessor = None  # Store preprocessing pipeline
+        self.trained_models = {}
+        self.preprocessor = None
         
+    def _clean_infinite_values(self, X: np.ndarray) -> np.ndarray:
+        """Replace infinite values with NaN"""
+        return np.where(np.isinf(X), np.nan, X)
+    
     def run(self) -> Dict[str, Any]:
-        """
-        Run the complete AutoML pipeline
-        
-        Returns:
-            Complete AutoML results with trained models
-        """
         print("🚀 Starting AutoML Engine...")
         
-        # Step 1: Identify target and features
-        print("📋 Identifying target and features...")
         self._identify_target()
-        
-        # Step 2: Detect problem type
-        print("🔍 Detecting problem type...")
         self._detect_problem_type()
-        
-        # Step 3: Prepare data
-        print("📊 Preparing data...")
         X, y, feature_names = self._prepare_data()
         
-        # Step 4: Create preprocessing pipeline
-        print("🔧 Creating preprocessing pipeline...")
-        self._create_preprocessor(X, feature_names)
+        # Clean infinite values
+        X = self._clean_infinite_values(X)
         
-        # Step 5: Apply preprocessing
-        print("📊 Applying preprocessing...")
+        self._create_preprocessor(X, feature_names)
         X_processed = self._apply_preprocessing(X)
         
-        # Step 6: Get feature counts
-        print("📊 Calculating feature counts...")
         feature_counts = self._get_feature_counts(X_processed, feature_names)
-        
-        # Step 7: Split data
-        print("📊 Splitting data...")
         split_info = self._split_data(X_processed, y)
-        
-        # Step 8: Select models
-        print("🤖 Selecting models...")
         models = self._select_models()
-        
-        # Step 9: Train models
-        print("🏋️ Training models...")
         trained_models = self._train_models(models, split_info)
-        
-        # Step 10: Store trained models
-        print("💾 Storing trained models...")
         self._store_trained_models(trained_models)
-        
-        # Step 11: Evaluate models
-        print("📈 Evaluating models...")
         evaluated_models = self._evaluate_models(trained_models, split_info)
-        
-        # Step 12: Rank models
-        print("🏆 Ranking models...")
         ranked_models = self._rank_models(evaluated_models)
-        
-        # Step 13: Select best model
-        print("⭐ Selecting best model...")
         best_model = self._select_best(ranked_models)
         
-        # Compile results
         self.results = {
             "problem_type": self.problem_type,
             "target_column": self.target_column,
@@ -129,15 +81,12 @@ class AutoMLEngine:
         return self.results
     
     def _identify_target(self):
-        """Identify target column from context"""
         feature_eng = self.context.get("feature_engineering", {})
         roles = feature_eng.get("feature_roles", {})
-        
         for col, role in roles.items():
             if role == "target":
                 self.target_column = col
                 break
-        
         if self.target_column is None:
             validation = self.context.get("validation", {})
             profiling = validation.get("profiling", {})
@@ -146,20 +95,15 @@ class AutoMLEngine:
                 self.target_column = candidates[0]
     
     def _detect_problem_type(self):
-        """Detect ML problem type from target"""
         if self.target_column is None:
             raise ValueError("No target column found")
-        
         y = self.df[self.target_column].dropna().values
         problem_info = self.model_selector.detect_problem_type(y)
         self.problem_type = problem_info["problem_type"]
         self.problem_info = problem_info
     
     def _prepare_data(self) -> tuple:
-        """Prepare data for ML training"""
         feature_cols = [col for col in self.df.columns if col != self.target_column]
-        
-        # Use only numeric columns
         numeric_cols = self.df[feature_cols].select_dtypes(include=[np.number]).columns.tolist()
         
         X = None
@@ -176,7 +120,6 @@ class AutoMLEngine:
                         feature_names.append(col + '_encoded')
                     except:
                         pass
-            
             X = self.df[numeric_cols + encoded_cols].fillna(0).values
             feature_names = numeric_cols + encoded_cols
         else:
@@ -195,20 +138,16 @@ class AutoMLEngine:
         return X, y, feature_names
     
     def _create_preprocessor(self, X: np.ndarray, feature_names: List[str]):
-        """Create preprocessing pipeline"""
-        # Detect if we need scaling
-        # Check for outliers in the data
         has_outliers = False
         try:
-            q1 = np.percentile(X, 25, axis=0)
-            q3 = np.percentile(X, 75, axis=0)
+            q1 = np.nanpercentile(X, 25, axis=0)
+            q3 = np.nanpercentile(X, 75, axis=0)
             iqr = q3 - q1
             outliers = ((X < (q1 - 1.5 * iqr)) | (X > (q3 + 1.5 * iqr))).any()
             has_outliers = outliers.any() if hasattr(outliers, 'any') else outliers
         except:
             pass
         
-        # Choose scaler
         if has_outliers:
             scaler = RobustScaler()
         else:
@@ -221,40 +160,33 @@ class AutoMLEngine:
         }
     
     def _apply_preprocessing(self, X: np.ndarray) -> np.ndarray:
-        """Apply preprocessing to data"""
         if self.preprocessor is None:
             return X
         
-        scaler = self.preprocessor["scaler"]
+        # Handle infinite values before scaling
+        X_clean = np.where(np.isinf(X), np.nan, X)
         
-        # Fit scaler if not fitted
+        scaler = self.preprocessor["scaler"]
         if not self.preprocessor["is_fitted"]:
-            scaler.fit(X)
+            scaler.fit(X_clean)
             self.preprocessor["is_fitted"] = True
         
-        return scaler.transform(X)
+        return scaler.transform(X_clean)
     
     def _get_feature_counts(self, X: np.ndarray, feature_names: List[str]) -> Dict[str, Any]:
-        """Calculate feature counts"""
-        original_features = len(self.df.columns) - 1
-        encoded_features = len(feature_names)
-        
         return {
-            "original_features": original_features,
-            "encoded_features": encoded_features,
-            "final_features": encoded_features
+            "original_features": len(self.df.columns) - 1,
+            "encoded_features": len(feature_names),
+            "final_features": len(feature_names)
         }
     
     def _split_data(self, X: np.ndarray, y: np.ndarray) -> Dict[str, Any]:
-        """Split data into train, validation, and test sets"""
         X_train, X_temp, y_train, y_temp = train_test_split(
             X, y, test_size=0.3, random_state=self.random_seed
         )
-        
         X_val, X_test, y_val, y_test = train_test_split(
             X_temp, y_temp, test_size=0.5, random_state=self.random_seed
         )
-        
         return {
             "train_size": len(X_train),
             "validation_size": len(X_val),
@@ -273,14 +205,11 @@ class AutoMLEngine:
         }
     
     def _select_models(self) -> List[Dict[str, Any]]:
-        """Select candidate models"""
         return self.model_selector.select_models(self.problem_type)
     
     def _train_models(self, models: List[Dict[str, Any]], 
                      split_info: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Train all models"""
         trained_models = []
-        
         for model_config in models:
             try:
                 result = self.trainer.train_model(
@@ -302,11 +231,9 @@ class AutoMLEngine:
                     "model_name": model_config["name"],
                     "error": str(e)
                 })
-        
         return trained_models
     
     def _store_trained_models(self, trained_models: List[Dict[str, Any]]):
-        """Store trained models for later use"""
         for result in trained_models:
             if "error" not in result and "model_instance" in result:
                 model_name = result["model_name"]
@@ -319,14 +246,11 @@ class AutoMLEngine:
     
     def _evaluate_models(self, trained_models: List[Dict[str, Any]], 
                         split_info: Dict[str, Any]) -> List[Dict[str, Any]]:
-        """Evaluate all trained models"""
         evaluated_models = []
-        
         for result in trained_models:
             if "error" in result:
                 evaluated_models.append(result)
                 continue
-            
             try:
                 evaluation = self.evaluator.evaluate_model(
                     result["model_instance"],
@@ -334,7 +258,6 @@ class AutoMLEngine:
                     split_info["y_test"],
                     self.problem_type
                 )
-                
                 result["evaluation"] = evaluation
                 result["split_info"] = {
                     "train_size": split_info["train_size"],
@@ -348,22 +271,17 @@ class AutoMLEngine:
                 print(f"   ❌ Failed to evaluate {result['model_name']}: {str(e)}")
                 result["error"] = str(e)
                 evaluated_models.append(result)
-        
         return evaluated_models
     
     def _rank_models(self, evaluated_models: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Rank models by performance"""
         return self.ranker.rank_models(evaluated_models, self.problem_type)
     
     def _select_best(self, ranked_models: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Select and explain the best model"""
         return self.ranker.select_best_model(ranked_models)
     
     def _generate_training_summary(self, trained_models: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Generate training summary"""
         successful = [m for m in trained_models if "error" not in m]
         failed = [m for m in trained_models if "error" in m]
-        
         return {
             "models_trained": len(successful),
             "models_failed": len(failed),
@@ -374,14 +292,5 @@ class AutoMLEngine:
 
 
 def run_automl(context: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convenience function to run AutoML
-    
-    Args:
-        context: Frozen pipeline context
-        
-    Returns:
-        AutoML results with trained models
-    """
     engine = AutoMLEngine(context)
     return engine.run()

@@ -23,6 +23,8 @@ class DataValidator:
         if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
             return int(obj)
         elif isinstance(obj, (np.float64, np.float32, np.float16)):
+            if np.isinf(obj):
+                return None
             return float(obj)
         elif isinstance(obj, np.bool_):
             return bool(obj)
@@ -107,12 +109,12 @@ class DataValidator:
                     has_negative_inf = True
                     self._add_warning(f"'{col}' contains negative infinity values (-∞)")
         
-        return {
+        return self._convert_to_native({
             "has_infinite": has_positive_inf or has_negative_inf,
             "has_positive_inf": has_positive_inf,
             "has_negative_inf": has_negative_inf,
             "infinite_columns": infinite_columns
-        }
+        })
     
     def detect_id_columns(self) -> List[str]:
         id_columns = []
@@ -219,22 +221,24 @@ class DataValidator:
             }
             
             if pd.api.types.is_numeric_dtype(self.df[col]):
-                if np.isinf(self.df[col]).any():
+                # Replace inf with NaN for statistics
+                clean_col = self.df[col].replace([np.inf, -np.inf], np.nan)
+                if clean_col.isnull().all():
                     col_stats["has_infinite"] = True
                     col_stats["mean"] = None
                     col_stats["std"] = None
-                    col_stats["min"] = float(self.df[col].replace([np.inf, -np.inf], np.nan).min())
-                    col_stats["max"] = float(self.df[col].replace([np.inf, -np.inf], np.nan).max())
+                    col_stats["min"] = None
+                    col_stats["max"] = None
                     col_stats["skewness"] = None
                     col_stats["kurtosis"] = None
                 else:
-                    col_stats["has_infinite"] = False
-                    col_stats["mean"] = float(self.df[col].mean()) if not pd.isna(self.df[col].mean()) else None
-                    col_stats["std"] = float(self.df[col].std()) if not pd.isna(self.df[col].std()) else None
-                    col_stats["min"] = float(self.df[col].min()) if not pd.isna(self.df[col].min()) else None
-                    col_stats["max"] = float(self.df[col].max()) if not pd.isna(self.df[col].max()) else None
-                    col_stats["skewness"] = float(self.df[col].skew()) if not pd.isna(self.df[col].skew()) else None
-                    col_stats["kurtosis"] = float(self.df[col].kurt()) if not pd.isna(self.df[col].kurt()) else None
+                    col_stats["has_infinite"] = np.isinf(self.df[col]).any()
+                    col_stats["mean"] = float(clean_col.mean()) if not pd.isna(clean_col.mean()) else None
+                    col_stats["std"] = float(clean_col.std()) if not pd.isna(clean_col.std()) else None
+                    col_stats["min"] = float(clean_col.min()) if not pd.isna(clean_col.min()) else None
+                    col_stats["max"] = float(clean_col.max()) if not pd.isna(clean_col.max()) else None
+                    col_stats["skewness"] = float(clean_col.skew()) if not pd.isna(clean_col.skew()) else None
+                    col_stats["kurtosis"] = float(clean_col.kurt()) if not pd.isna(clean_col.kurt()) else None
             
             if pd.api.types.is_object_dtype(self.df[col]) or pd.api.types.is_string_dtype(self.df[col]):
                 top_values = self.df[col].value_counts().head(5)
