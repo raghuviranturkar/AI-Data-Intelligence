@@ -1,6 +1,6 @@
 """
 Upload Service
-Handles file upload and processing using the Data Intelligence Pipeline
+Handles file upload and processing
 """
 import os
 import shutil
@@ -8,32 +8,22 @@ from typing import Dict, Any
 from datetime import datetime
 from fastapi import UploadFile
 import pandas as pd
+import json
 
 from .pipeline import run_pipeline
+from ..utils.json_encoder import NumpyJSONEncoder
 
 
 class UploadService:
     """Service for handling file uploads"""
     
     def __init__(self, upload_dir: str = "uploads"):
-        """
-        Initialize upload service
-        
-        Args:
-            upload_dir: Directory to store uploaded files
-        """
         self.upload_dir = upload_dir
         os.makedirs(upload_dir, exist_ok=True)
     
     async def process_upload(self, file: UploadFile) -> Dict[str, Any]:
         """
         Process uploaded file using the complete pipeline
-        
-        Args:
-            file: Uploaded file object
-            
-        Returns:
-            Dictionary with processing results
         """
         # Validate file type
         allowed_extensions = {'.csv', '.xlsx', '.xls'}
@@ -66,16 +56,22 @@ class UploadService:
             else:
                 df = pd.read_excel(file_path)
             
+            print(f"📊 Loaded dataset: {len(df)} rows, {len(df.columns)} columns")
+            
             # Run pipeline
             results = run_pipeline(df, file.filename)
             
             # Add file path to results
             results["file_path"] = file_path
             
+            print("✅ Pipeline complete!")
             return results
             
         except Exception as e:
             # Clean up file if processing fails
             if os.path.exists(file_path):
                 os.remove(file_path)
+            print(f"❌ Error: {str(e)}")
+            import traceback
+            traceback.print_exc()
             raise Exception(f"Error processing dataset: {str(e)}")

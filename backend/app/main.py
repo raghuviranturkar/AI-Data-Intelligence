@@ -3,10 +3,13 @@ FastAPI Application Entry Point
 """
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import logging
+import json
 
 from app.schemas.dataset import UploadResponse, ErrorResponse
 from app.services.upload_service import UploadService
+from app.utils.json_encoder import NumpyJSONEncoder
 
 # Configure logging
 logging.basicConfig(
@@ -18,14 +21,14 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI app
 app = FastAPI(
     title="AI Data Intelligence Engine",
-    description="API for data processing, analysis, and ML preparation",
+    description="API for data processing and analysis",
     version="1.0.0"
 )
 
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Update for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -67,34 +70,23 @@ async def upload_dataset(file: UploadFile = File(...)):
     Upload and analyze a dataset
     
     Accepts CSV, XLSX, or XLS files.
-    Returns comprehensive dataset analysis including:
-    - Dataset inspection
-    - Validation & quality
-    - Cleaning recommendations
-    - Outlier detection
-    - Exploratory Data Analysis (EDA)
-    - Feature Engineering recommendations
-    - ML readiness assessment
+    Returns comprehensive dataset analysis.
     """
     logger.info(f"Received file: {file.filename}")
     
     try:
-        # Process the upload using pipeline
         result = await upload_service.process_upload(file)
         
-        # Return combined response
-        return UploadResponse(
-            status="success",
-            message=f"File {file.filename} processed successfully",
-            data={
-                "dataset": result.get("dataset", {}),
-                "validation": result.get("validation", {}),
-                "cleaning": result.get("cleaning", {}),
-                "outliers": result.get("outliers", {}),
-                "eda": result.get("eda", {}),
-                "feature_engineering": result.get("feature_engineering", {})
-            }
-        )
+        # Convert response to JSON with custom encoder
+        response_data = {
+            "status": "success",
+            "message": f"File {file.filename} processed successfully",
+            "data": result
+        }
+        
+        # Use custom JSON encoder to handle numpy types
+        json_str = json.dumps(response_data, cls=NumpyJSONEncoder)
+        return JSONResponse(content=json.loads(json_str))
         
     except ValueError as e:
         logger.error(f"Validation error: {str(e)}")
@@ -104,6 +96,8 @@ async def upload_dataset(file: UploadFile = File(...)):
         )
     except Exception as e:
         logger.error(f"Error processing file: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=500,
             detail=str(e)

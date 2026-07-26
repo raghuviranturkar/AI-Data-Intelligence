@@ -1,7 +1,3 @@
-import numpy as np
-
-import numpy as np
-
 """
 Dataset Inspector Service
 Handles all dataset inspection and profiling operations
@@ -16,21 +12,12 @@ class DatasetInspector:
     """Inspects and profiles datasets loaded from CSV or Excel files"""
     
     def __init__(self, file_path: str):
-        """
-        Initialize the inspector with a file path
-        
-        Args:
-            file_path: Path to the dataset file
-        """
         self.file_path = file_path
         self.df = None
         self.file_name = os.path.basename(file_path)
         self._load_dataset()
     
     def _load_dataset(self) -> None:
-        """
-        Load dataset automatically detecting file type
-        """
         file_extension = os.path.splitext(self.file_path)[1].lower()
         
         try:
@@ -43,90 +30,54 @@ class DatasetInspector:
         except Exception as e:
             raise Exception(f"Error loading dataset: {str(e)}")
     
+    def _convert_to_native(self, obj: Any) -> Any:
+        """Convert numpy types to Python native types"""
+        if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+            return int(obj)
+        elif isinstance(obj, (np.float64, np.float32, np.float16)):
+            return float(obj)
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: self._convert_to_native(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_to_native(v) for v in obj]
+        elif isinstance(obj, pd.Series):
+            return obj.tolist()
+        else:
+            return obj
+    
     def get_shape(self) -> Dict[str, int]:
-        """
-        Get dataset dimensions
-        
-        Returns:
-            Dictionary with rows and columns count
-        """
         return {
             "rows": int(self.df.shape[0]),
             "columns": int(self.df.shape[1])
         }
     
     def get_columns(self) -> List[str]:
-        """
-        Get list of column names
-        
-        Returns:
-            List of column names
-        """
         return self.df.columns.tolist()
     
     def get_dtypes(self) -> Dict[str, str]:
-        """
-        Get data types for each column
-        
-        Returns:
-            Dictionary mapping column names to data types
-        """
         return self.df.dtypes.astype(str).to_dict()
     
     def get_numeric_columns(self) -> List[str]:
-        """
-        Get names of numeric columns
-        
-        Returns:
-            List of numeric column names
-        """
         return self.df.select_dtypes(include=[np.number]).columns.tolist()
     
     def get_categorical_columns(self) -> List[str]:
-        """
-        Get names of categorical columns
-        
-        Returns:
-            List of categorical column names
-        """
         return self.df.select_dtypes(include=['object', 'category']).columns.tolist()
     
     def missing_values(self) -> Dict[str, int]:
-        """
-        Count missing values per column
-        
-        Returns:
-            Dictionary mapping column names to missing value counts
-        """
-        return self.df.isnull().sum().to_dict()
+        return self._convert_to_native(self.df.isnull().sum().to_dict())
     
     def missing_percentage(self) -> Dict[str, float]:
-        """
-        Calculate percentage of missing values per column
-        
-        Returns:
-            Dictionary mapping column names to missing percentage
-        """
-        return (self.df.isnull().sum() / len(self.df) * 100).to_dict()
+        return self._convert_to_native((self.df.isnull().sum() / len(self.df) * 100).to_dict())
     
     def duplicate_rows(self) -> int:
-        """
-        Count duplicate rows
-        
-        Returns:
-            Number of duplicate rows
-        """
         return int(self.df.duplicated().sum())
     
-    def memory_usage(self) -> Dict[str, str]:
-        """
-        Calculate memory usage
-        
-        Returns:
-            Dictionary with memory usage in different formats
-        """
+    def memory_usage(self) -> Dict[str, Any]:
         total_memory = self.df.memory_usage(deep=True).sum()
-        
         return {
             "bytes": int(total_memory),
             "kilobytes": round(total_memory / 1024, 2),
@@ -135,12 +86,6 @@ class DatasetInspector:
         }
     
     def basic_statistics(self) -> Dict[str, Any]:
-        """
-        Get basic statistics for numeric columns
-        
-        Returns:
-            Dictionary with statistics for each numeric column
-        """
         numeric_df = self.df.select_dtypes(include=[np.number])
         
         if numeric_df.empty:
@@ -157,24 +102,10 @@ class DatasetInspector:
             "max": numeric_df.max().to_dict()
         }
         
-        # Convert numpy types to Python types for JSON serialization
-        for key in stats:
-            for col in stats[key]:
-                if isinstance(stats[key][col], (np.int64, np.float64)):
-                    stats[key][col] = float(stats[key][col])
-                elif isinstance(stats[key][col], np.int32):
-                    stats[key][col] = int(stats[key][col])
-        
-        return stats
+        return self._convert_to_native(stats)
     
     def get_summary(self) -> Dict[str, Any]:
-        """
-        Get complete dataset summary
-        
-        Returns:
-            Comprehensive dataset summary
-        """
-        return {
+        return self._convert_to_native({
             "file_name": self.file_name,
             "shape": self.get_shape(),
             "columns": self.get_columns(),
@@ -186,18 +117,9 @@ class DatasetInspector:
             "duplicate_rows": self.duplicate_rows(),
             "memory_usage": self.memory_usage(),
             "basic_statistics": self.basic_statistics()
-        }
+        })
 
 
 def inspect_dataset(file_path: str) -> Dict[str, Any]:
-    """
-    Convenience function to inspect a dataset
-    
-    Args:
-        file_path: Path to the dataset file
-        
-    Returns:
-        Complete dataset summary
-    """
     inspector = DatasetInspector(file_path)
     return inspector.get_summary()

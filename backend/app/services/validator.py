@@ -12,29 +12,36 @@ class DataValidator:
     """Validates dataset quality and generates quality reports"""
     
     def __init__(self, df: pd.DataFrame, file_name: str = "unknown"):
-        """
-        Initialize validator with a pandas DataFrame
-        
-        Args:
-            df: Pandas DataFrame to validate
-            file_name: Name of the original file
-        """
         self.df = df
         self.file_name = file_name
         self.quality_score = 100
-        self._warnings = set()  # Use set to avoid duplicates
+        self._warnings = set()
         self.validation_results = {}
-        
+    
+    def _convert_to_native(self, obj: Any) -> Any:
+        """Convert numpy types to Python native types"""
+        if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+            return int(obj)
+        elif isinstance(obj, (np.float64, np.float32, np.float16)):
+            return float(obj)
+        elif isinstance(obj, np.bool_):
+            return bool(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        elif isinstance(obj, dict):
+            return {k: self._convert_to_native(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_to_native(v) for v in obj]
+        else:
+            return obj
+    
     def _add_warning(self, warning: str) -> None:
-        """Add a warning (automatically handles duplicates)"""
         self._warnings.add(warning)
     
     def _get_warnings(self) -> List[str]:
-        """Get unique warnings as a list"""
         return list(self._warnings)
     
     def validate_empty_dataset(self) -> bool:
-        """Check if dataset is empty"""
         is_empty = self.df.empty
         if is_empty:
             self.quality_score -= 30
@@ -42,7 +49,6 @@ class DataValidator:
         return is_empty
     
     def detect_empty_columns(self) -> List[str]:
-        """Detect columns that are completely empty (all NaN)"""
         empty_cols = self.df.columns[self.df.isnull().all()].tolist()
         if empty_cols:
             self.quality_score -= 5 * len(empty_cols)
@@ -50,7 +56,6 @@ class DataValidator:
         return empty_cols
     
     def detect_duplicate_columns(self) -> List[str]:
-        """Detect duplicate column names"""
         duplicate_cols = []
         seen = set()
         for col in self.df.columns:
@@ -64,7 +69,6 @@ class DataValidator:
         return duplicate_cols
     
     def detect_constant_columns(self) -> List[str]:
-        """Detect columns with constant values"""
         constant_cols = []
         for col in self.df.columns:
             if len(self.df[col].dropna().unique()) <= 1:
@@ -74,7 +78,6 @@ class DataValidator:
         return constant_cols
     
     def detect_high_missing_columns(self, threshold: float = 50.0) -> List[str]:
-        """Detect columns with missing values above threshold"""
         high_missing = []
         for col in self.df.columns:
             missing_pct = (self.df[col].isnull().sum() / len(self.df)) * 100
@@ -85,7 +88,6 @@ class DataValidator:
         return high_missing
     
     def detect_infinite_values(self) -> Dict[str, Any]:
-        """Detect infinite values in numeric columns"""
         has_positive_inf = False
         has_negative_inf = False
         infinite_columns = []
@@ -113,16 +115,13 @@ class DataValidator:
         }
     
     def detect_id_columns(self) -> List[str]:
-        """Detect potential ID columns"""
         id_columns = []
         id_patterns = ['id', 'customer_id', 'order_id', 'employee_id', 
                       'userid', 'product_id', 'transaction_id']
         
         for col in self.df.columns:
             col_lower = col.lower().strip()
-            # Check by name pattern
             if any(pattern in col_lower for pattern in id_patterns):
-                # Check if unique values equals total rows (likely ID)
                 if len(self.df[col].dropna().unique()) == len(self.df):
                     id_columns.append(col)
                     self._add_warning(f"'{col}' appears to be an identifier column")
@@ -130,7 +129,6 @@ class DataValidator:
         return id_columns
     
     def detect_date_columns(self) -> List[str]:
-        """Detect potential date/datetime columns"""
         date_columns = []
         date_patterns = ['date', 'datetime', 'timestamp', 'time', 
                         'created_at', 'updated_at', 'dob', 'birth']
@@ -138,7 +136,6 @@ class DataValidator:
         for col in self.df.columns:
             col_lower = col.lower().strip()
             if any(pattern in col_lower for pattern in date_patterns):
-                # Check if it can be converted to datetime
                 try:
                     sample = self.df[col].dropna()
                     if not sample.empty:
@@ -151,48 +148,39 @@ class DataValidator:
         return date_columns
     
     def detect_boolean_columns(self) -> List[str]:
-        """Detect boolean columns"""
         bool_columns = []
         bool_values = {True, False, 'True', 'False', 'true', 'false', 1, 0, 'Yes', 'No', 'yes', 'no'}
         
         for col in self.df.columns:
             unique_values = set(self.df[col].dropna().unique())
-            # Check if all unique values are boolean-like
             if len(unique_values) <= 2 and all(v in bool_values for v in unique_values):
                 bool_columns.append(col)
         
         return bool_columns
     
     def calculate_cardinality(self, threshold: int = 50) -> Dict[str, Any]:
-        """Calculate cardinality and detect high cardinality columns"""
         high_cardinality = {}
         
-        # Only check categorical/text columns, not numeric
         categorical_columns = self.df.select_dtypes(include=['object', 'string', 'category']).columns
         
         for col in categorical_columns:
             unique_count = self.df[col].nunique()
             if unique_count > threshold:
                 high_cardinality[col] = {
-                    "unique_values": unique_count,
-                    "total_rows": len(self.df),
+                    "unique_values": int(unique_count),
+                    "total_rows": int(len(self.df)),
                     "ratio": round(unique_count / len(self.df), 2)
                 }
                 self._add_warning(f"'{col}' has high cardinality ({unique_count} unique values)")
         
-        return high_cardinality
+        return self._convert_to_native(high_cardinality)
     
     def detect_target_candidates(self) -> List[str]:
-        """
-        Detect potential target columns for ML
-        Excludes identifiers, datetime columns, and constant columns
-        """
         target_candidates = []
         target_patterns = ['target', 'label', 'class', 
                           'purchase', 'churn', 'survive', 'default', 
                           'fraud', 'response', 'conversion']
         
-        # Get columns to exclude
         id_columns = self.detect_id_columns()
         date_columns = self.detect_date_columns()
         constant_columns = self.detect_constant_columns()
@@ -203,17 +191,13 @@ class DataValidator:
                 continue
                 
             col_lower = col.lower().strip()
-            # Check by name pattern
             if any(pattern in col_lower for pattern in target_patterns):
                 target_candidates.append(col)
-            # Check binary columns (could be target)
             elif len(self.df[col].dropna().unique()) == 2:
                 target_candidates.append(col)
-            # Check low cardinality columns (2-10 unique values)
             elif 2 <= self.df[col].nunique() <= 10:
                 target_candidates.append(col)
         
-        # Remove duplicates and keep first occurrence
         seen = set()
         unique_candidates = []
         for col in target_candidates:
@@ -224,7 +208,6 @@ class DataValidator:
         return unique_candidates
     
     def get_column_statistics(self) -> Dict[str, Any]:
-        """Get detailed column statistics"""
         stats = {}
         
         for col in self.df.columns:
@@ -235,9 +218,7 @@ class DataValidator:
                 "missing_percentage": float((self.df[col].isnull().sum() / len(self.df)) * 100),
             }
             
-            # Add statistics based on column type
             if pd.api.types.is_numeric_dtype(self.df[col]):
-                # Check for infinite values
                 if np.isinf(self.df[col]).any():
                     col_stats["has_infinite"] = True
                     col_stats["mean"] = None
@@ -255,83 +236,43 @@ class DataValidator:
                     col_stats["skewness"] = float(self.df[col].skew()) if not pd.isna(self.df[col].skew()) else None
                     col_stats["kurtosis"] = float(self.df[col].kurt()) if not pd.isna(self.df[col].kurt()) else None
             
-            # Add sample values for categorical columns
             if pd.api.types.is_object_dtype(self.df[col]) or pd.api.types.is_string_dtype(self.df[col]):
                 top_values = self.df[col].value_counts().head(5)
                 col_stats["top_values"] = top_values.to_dict() if not top_values.empty else {}
                 col_stats["most_common"] = str(self.df[col].mode().iloc[0]) if not self.df[col].mode().empty else None
             
-            stats[col] = col_stats
+            stats[col] = self._convert_to_native(col_stats)
         
         return stats
     
     def classify_columns(self) -> Dict[str, List[str]]:
-        """Classify columns into different types"""
         classifications = {
-            "identifier": [],
-            "numeric": [],
-            "categorical": [],
-            "boolean": [],
-            "datetime": [],
-            "target_candidate": []
+            "identifier": self.detect_id_columns(),
+            "numeric": self.df.select_dtypes(include=[np.number]).columns.tolist(),
+            "categorical": self.df.select_dtypes(include=['object', 'string']).columns.tolist(),
+            "boolean": self.detect_boolean_columns(),
+            "datetime": self.detect_date_columns(),
+            "target_candidate": self.detect_target_candidates()
         }
-        
-        # Get ID columns
-        classifications["identifier"] = self.detect_id_columns()
-        
-        # Get datetime columns
-        classifications["datetime"] = self.detect_date_columns()
-        
-        # Get boolean columns
-        classifications["boolean"] = self.detect_boolean_columns()
-        
-        # Get numeric columns
-        classifications["numeric"] = self.df.select_dtypes(include=[np.number]).columns.tolist()
-        
-        # Get categorical columns (object/string types)
-        classifications["categorical"] = self.df.select_dtypes(include=['object', 'string']).columns.tolist()
-        
-        # Get target candidates
-        classifications["target_candidate"] = self.detect_target_candidates()
-        
-        return classifications
+        return self._convert_to_native(classifications)
     
     def calculate_quality_score(self) -> int:
-        """Calculate final quality score"""
-        # Start with base score (already modified by individual checks)
-        # Ensure score doesn't go below 0
         return max(0, min(100, self.quality_score))
     
     def check_readiness(self) -> Dict[str, Any]:
-        """
-        Check if dataset is ready for analysis and provide context
-        """
         issues_count = len(self._warnings)
         score = self.calculate_quality_score()
         
         if self.df.empty:
-            return {
-                "status": "Not Ready",
-                "confidence": 0,
-                "reason": "Dataset is empty"
-            }
+            return {"status": "Not Ready", "confidence": 0, "reason": "Dataset is empty"}
         
         if len(self.df.columns) < 2:
-            return {
-                "status": "Not Ready",
-                "confidence": 0,
-                "reason": "Dataset has less than 2 columns"
-            }
+            return {"status": "Not Ready", "confidence": 0, "reason": "Dataset has less than 2 columns"}
         
         constant_cols = self.detect_constant_columns()
         if len(constant_cols) == len(self.df.columns):
-            return {
-                "status": "Not Ready",
-                "confidence": 0,
-                "reason": "All columns are constant"
-            }
+            return {"status": "Not Ready", "confidence": 0, "reason": "All columns are constant"}
         
-        # Determine readiness based on score
         if score >= 80:
             return {
                 "status": "Ready",
@@ -352,8 +293,6 @@ class DataValidator:
             }
     
     def get_validation_report(self) -> Dict[str, Any]:
-        """Generate comprehensive validation report"""
-        # Run all validation checks
         empty_dataset = self.validate_empty_dataset()
         empty_columns = self.detect_empty_columns()
         duplicate_columns = self.detect_duplicate_columns()
@@ -368,13 +307,10 @@ class DataValidator:
         column_stats = self.get_column_statistics()
         classifications = self.classify_columns()
         
-        # Update quality score
         self.quality_score = self.calculate_quality_score()
-        
-        # Get readiness
         readiness = self.check_readiness()
         
-        return {
+        return self._convert_to_native({
             "dataset": {
                 "file_name": self.file_name,
                 "rows": len(self.df),
@@ -405,19 +341,9 @@ class DataValidator:
                 "warnings": self._get_warnings(),
                 "total_warnings": len(self._get_warnings())
             }
-        }
+        })
 
 
 def validate_dataset(df: pd.DataFrame, file_name: str = "unknown") -> Dict[str, Any]:
-    """
-    Convenience function to validate a dataset
-    
-    Args:
-        df: Pandas DataFrame to validate
-        file_name: Name of the original file
-        
-    Returns:
-        Comprehensive validation report
-    """
     validator = DataValidator(df, file_name)
     return validator.get_validation_report()

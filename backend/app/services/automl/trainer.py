@@ -29,14 +29,6 @@ class ModelTrainer:
                    y: np.ndarray) -> Dict[str, Any]:
         """
         Train a single model with cross-validation
-        
-        Args:
-            model_config: Model configuration from selector
-            X: Feature matrix
-            y: Target variable
-            
-        Returns:
-            Training results
         """
         # Import the model class
         model_class = self._import_model_class(model_config["class"])
@@ -50,10 +42,32 @@ class ModelTrainer:
         # Initialize model
         model = model_class(**model_config.get("params", {}))
         
+        # Handle small datasets
+        n_samples = len(X)
+        if n_samples < 10:
+            # For very small datasets, use a smaller test size
+            test_size = max(0.1, 1.0 / n_samples) if n_samples > 1 else 0.1
+            cv_folds = min(2, n_samples) if n_samples >= 2 else 2
+        else:
+            test_size = self.test_size
+            cv_folds = min(self.cv_folds, n_samples)
+        
         # Split data
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=self.test_size, random_state=42
-        )
+        try:
+            X_train, X_test, y_train, y_test = train_test_split(
+                X, y, test_size=test_size, random_state=42
+            )
+        except ValueError:
+            # If still failing, use a different approach
+            if n_samples == 1:
+                return {
+                    "model_name": model_config["name"],
+                    "error": "Dataset too small for training. Need at least 2 samples."
+                }
+            # Use a simple split
+            split_idx = max(1, int(n_samples * 0.7))
+            X_train, X_test = X[:split_idx], X[split_idx:]
+            y_train, y_test = y[:split_idx], y[split_idx:]
         
         # Train model
         start_time = time.time()
@@ -62,7 +76,7 @@ class ModelTrainer:
         
         # Cross-validation
         try:
-            cv_scores = cross_val_score(model, X_train, y_train, cv=self.cv_folds)
+            cv_scores = cross_val_score(model, X_train, y_train, cv=cv_folds)
             cv_results = {
                 "mean": float(np.mean(cv_scores)),
                 "std": float(np.std(cv_scores)),
