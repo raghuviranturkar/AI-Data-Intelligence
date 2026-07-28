@@ -1,12 +1,15 @@
 import React, { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, BarChart3, Settings, Brain, Shield, Lightbulb } from 'lucide-react'
 import { Button } from '../components/common/Button'
 import ProgressBar from '../components/common/ProgressBar'
 import HorizontalPipeline from '../components/pipeline/HorizontalPipeline'
+import { useData } from '../context/DataContext'
+import { uploadDataset } from '../services/api'
 import { cn } from '../utils/cn'
 
 const pipelineStages = [
-  { id: 'upload', label: 'Upload', icon: <Upload className="h-6 w-6" />, status: 'completed' as const },
+  { id: 'upload', label: 'Upload', icon: <Upload className="h-6 w-6" />, status: 'waiting' as const },
   { id: 'validation', label: 'Validation', icon: <CheckCircle className="h-6 w-6" />, status: 'waiting' as const },
   { id: 'cleaning', label: 'Cleaning', icon: <Loader2 className="h-6 w-6" />, status: 'waiting' as const },
   { id: 'eda', label: 'EDA', icon: <BarChart3 className="h-6 w-6" />, status: 'waiting' as const },
@@ -17,11 +20,13 @@ const pipelineStages = [
 ]
 
 const UploadPage: React.FC = () => {
+  const navigate = useNavigate()
+  const { setData, setIsLoading, setError } = useData()
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [status, setStatus] = useState<'idle' | 'uploading' | 'processing' | 'complete' | 'error'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [stages, setStages] = useState(pipelineStages)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -29,7 +34,7 @@ const UploadPage: React.FC = () => {
     const selected = e.target.files?.[0]
     if (selected) {
       setFile(selected)
-      setError(null)
+      setErrorMsg(null)
       setStatus('idle')
     }
   }
@@ -39,7 +44,7 @@ const UploadPage: React.FC = () => {
     const droppedFile = e.dataTransfer.files[0]
     if (droppedFile) {
       setFile(droppedFile)
-      setError(null)
+      setErrorMsg(null)
       setStatus('idle')
     }
   }
@@ -48,22 +53,12 @@ const UploadPage: React.FC = () => {
     e.preventDefault()
   }
 
-  const simulatePipeline = async () => {
-    const stageIds = ['validation', 'cleaning', 'eda', 'feature_engineering', 'automl', 'explainability', 'insights']
-    
-    for (let i = 0; i < stageIds.length; i++) {
-      setStages(prev => prev.map(s => 
-        s.id === stageIds[i] ? { ...s, status: 'running' as const } : s
-      ))
-      
-      await new Promise(resolve => setTimeout(resolve, 800 + Math.random() * 400))
-      
-      setStages(prev => prev.map(s => 
-        s.id === stageIds[i] ? { ...s, status: 'completed' as const } : s
-      ))
-      
-      setProgress(prev => Math.min(prev + 12, 100))
-    }
+  const updatePipelineStatus = (stageIndex: number, status: 'running' | 'completed') => {
+    setStages(prev => prev.map((s, i) => 
+      i === stageIndex ? { ...s, status } : 
+      i < stageIndex ? { ...s, status: 'completed' as const } :
+      s
+    ))
   }
 
   const handleUpload = async () => {
@@ -72,20 +67,74 @@ const UploadPage: React.FC = () => {
     setUploading(true)
     setStatus('uploading')
     setProgress(10)
+    setErrorMsg(null)
+    setIsLoading(true)
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      setProgress(30)
-      setStatus('processing')
+      updatePipelineStatus(0, 'completed')
+      setProgress(20)
 
-      await simulatePipeline()
-      
+      // Simulate validation
+      await new Promise(resolve => setTimeout(resolve, 500))
+      updatePipelineStatus(1, 'running')
+      await new Promise(resolve => setTimeout(resolve, 400))
+      updatePipelineStatus(1, 'completed')
+      setProgress(35)
+
+      // Simulate cleaning
+      updatePipelineStatus(2, 'running')
+      await new Promise(resolve => setTimeout(resolve, 400))
+      updatePipelineStatus(2, 'completed')
+      setProgress(50)
+
+      // Simulate EDA
+      updatePipelineStatus(3, 'running')
+      await new Promise(resolve => setTimeout(resolve, 500))
+      updatePipelineStatus(3, 'completed')
+      setProgress(60)
+
+      // Simulate Feature Engineering
+      updatePipelineStatus(4, 'running')
+      await new Promise(resolve => setTimeout(resolve, 400))
+      updatePipelineStatus(4, 'completed')
+      setProgress(70)
+
+      // Simulate AutoML
+      updatePipelineStatus(5, 'running')
+      await new Promise(resolve => setTimeout(resolve, 600))
+      updatePipelineStatus(5, 'completed')
+      setProgress(80)
+
+      // Simulate Explainability
+      updatePipelineStatus(6, 'running')
+      await new Promise(resolve => setTimeout(resolve, 400))
+      updatePipelineStatus(6, 'completed')
+      setProgress(90)
+
+      // Simulate Insights
+      updatePipelineStatus(7, 'running')
+      await new Promise(resolve => setTimeout(resolve, 500))
+      updatePipelineStatus(7, 'completed')
       setProgress(100)
+
+      // Make the actual API call
+      setStatus('processing')
+      const result = await uploadDataset(file)
+      
+      // Store data immediately
+      setData(result)
       setStatus('complete')
+      setIsLoading(false)
+      
+      // Navigate immediately - no delay
+      navigate('/')
       
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Upload failed. Please try again.'
+      setErrorMsg(message)
+      setError(message)
       setStatus('error')
-      setError('Upload failed. Please try again.')
+      setIsLoading(false)
     } finally {
       setUploading(false)
     }
@@ -95,7 +144,7 @@ const UploadPage: React.FC = () => {
     setFile(null)
     setStatus('idle')
     setProgress(0)
-    setError(null)
+    setErrorMsg(null)
     setStages(pipelineStages)
     if (fileInputRef.current) {
       fileInputRef.current.value = ''
@@ -109,7 +158,6 @@ const UploadPage: React.FC = () => {
         <p className="text-gray-500 dark:text-gray-400 mt-1">Upload a CSV or Excel file to analyze</p>
       </div>
 
-      {/* Upload Area */}
       <div 
         className={cn(
           'bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-8 transition-all duration-200',
@@ -122,8 +170,7 @@ const UploadPage: React.FC = () => {
           <div className="text-center py-8">
             <CheckCircle className="w-16 h-16 text-success-500 dark:text-success-400 mx-auto mb-4" />
             <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">Upload Complete!</h3>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">Your dataset has been successfully analyzed.</p>
-            <Button onClick={handleReset} className="mt-6">Upload Another</Button>
+            <p className="text-gray-500 dark:text-gray-400 mt-2">Redirecting to dashboard...</p>
           </div>
         ) : (
           <>
@@ -171,19 +218,22 @@ const UploadPage: React.FC = () => {
               </label>
             </div>
 
-            {/* Progress and Pipeline */}
             {(uploading || status === 'processing') && (
               <div className="mt-6 space-y-4">
                 <ProgressBar value={progress} label={status === 'uploading' ? 'Uploading...' : 'Processing...'} />
-                {progress > 30 && (
-                  <HorizontalPipeline stages={stages} currentStage={stages.findIndex(s => s.status === 'running')} overallProgress={progress} />
+                {progress > 20 && (
+                  <HorizontalPipeline 
+                    stages={stages} 
+                    currentStage={stages.findIndex(s => s.status === 'running')} 
+                    overallProgress={progress} 
+                  />
                 )}
               </div>
             )}
 
-            {error && (
+            {errorMsg && (
               <div className="mt-4 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg p-4 text-sm text-danger-700 dark:text-danger-400">
-                {error}
+                {errorMsg}
               </div>
             )}
 

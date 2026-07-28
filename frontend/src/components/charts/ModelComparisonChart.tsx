@@ -30,22 +30,37 @@ const ModelComparisonChart: React.FC<ModelComparisonChartProps> = ({
   const colors = {
     grid: isDark ? '#334155' : '#E5E7EB',
     text: isDark ? '#94A3B8' : '#6B7280',
-    bar1: isDark ? '#818CF8' : '#4F46E5',
-    bar2: isDark ? '#6366F1' : '#6366F1',
+    bar1: '#4F46E5',
+    bar2: '#818CF8',
     background: isDark ? '#1E293B' : '#FFFFFF',
     legend: isDark ? '#94A3B8' : '#6B7280',
+  }
+
+  // Only show models that have data
+  const validData = data.filter(item => item.model && (item.score > 0 || item.cvScore > 0))
+
+  if (validData.length === 0) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
+        <div className="flex items-center justify-center h-[300px] text-gray-400 dark:text-gray-500">
+          No model comparison data available
+        </div>
+      </div>
+    )
   }
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6 transition-colors duration-300">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">{title}</h3>
       <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data}>
+        <BarChart data={validData}>
           <CartesianGrid strokeDasharray="3 3" stroke={colors.grid} />
           <XAxis 
             dataKey="model" 
             stroke={colors.text}
-            tick={{ fill: colors.text }}
+            tick={{ fill: colors.text, fontSize: 12 }}
+            interval={0}
           />
           <YAxis 
             domain={[0, 1]} 
@@ -63,8 +78,8 @@ const ModelComparisonChart: React.FC<ModelComparisonChartProps> = ({
           <Legend 
             wrapperStyle={{ color: colors.legend }}
           />
-          <Bar dataKey="score" fill={colors.bar1} radius={[4, 4, 0, 0]} />
-          <Bar dataKey="cvScore" fill={colors.bar2} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="score" name="Test Score" fill={colors.bar1} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="cvScore" name="CV Score" fill={colors.bar2} radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

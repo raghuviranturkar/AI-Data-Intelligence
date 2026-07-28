@@ -20,8 +20,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
-      <Header collapsed={collapsed} />
+      <Sidebar collapsed={collapsed} />
+      <Header collapsed={collapsed} setCollapsed={setCollapsed} />
       <main 
         className={cn(
           'min-h-screen transition-all duration-300 ease-in-out',
@@ -29,7 +29,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         )}
       >
         <div className="pt-16">
-          <div className="p-6 max-w-7xl mx-auto">
+          <div className="p-4 md:p-6 max-w-7xl mx-auto">
             {children || <Outlet />}
           </div>
         </div>

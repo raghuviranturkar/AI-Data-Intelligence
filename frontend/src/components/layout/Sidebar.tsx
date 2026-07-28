@@ -16,7 +16,6 @@ import { cn } from '../../utils/cn'
 
 interface SidebarProps {
   collapsed: boolean
-  setCollapsed: (collapsed: boolean) => void
 }
 
 const navigation = [
@@ -31,7 +30,7 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
-const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
+const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const location = useLocation()
 
   return (
@@ -42,19 +41,16 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
       )}
     >
       <div className="flex h-full flex-col overflow-hidden">
-        {/* Logo - Click to toggle */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            'flex h-16 items-center border-b border-gray-200 dark:border-gray-800 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800 w-full',
-            collapsed ? 'justify-center px-2' : 'gap-2 px-6'
-          )}
-        >
+        {/* Logo */}
+        <div className={cn(
+          'flex h-16 items-center border-b border-gray-200 dark:border-gray-800 transition-all duration-300 flex-shrink-0',
+          collapsed ? 'justify-center px-2' : 'gap-2 px-6'
+        )}>
           <Database className="h-8 w-8 text-primary-600 flex-shrink-0" />
           {!collapsed && (
             <span className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">AI Data Intel</span>
           )}
-        </button>
+        </div>
 
         {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
@@ -83,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
         </nav>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-800 p-4">
+        <div className="border-t border-gray-200 dark:border-gray-800 p-4 flex-shrink-0">
           <div className={cn(
             'rounded-lg bg-primary-50 dark:bg-primary-900/20 p-3 transition-all duration-300',
             collapsed && 'flex justify-center'

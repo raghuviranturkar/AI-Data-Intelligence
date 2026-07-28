@@ -102,10 +102,10 @@ const InsightCard: React.FC<InsightCardProps> = ({
             {icon || <IconComponent className="h-5 w-5" />}
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
               {title}
             </h4>
-            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 line-clamp-2">
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1 whitespace-normal break-words">
               {description}
             </p>
           </div>
