@@ -1,29 +1,86 @@
 """
-PDF Generator - Creates real PDF reports
+PDF Generator - Creates proper PDF and HTML reports
 """
 import os
 from datetime import datetime
 from typing import Dict, Any, List
-from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.pagesizes import letter
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch, cm
+from reportlab.lib.units import inch
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, PageBreak,
-    Table, TableStyle, Image, KeepTogether
+    Table, TableStyle
 )
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-import io
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 import json
-
-from .sections import SectionGenerator
 
 
 class PDFGenerator:
     def __init__(self, context: Dict[str, Any]):
         self.context = context
-        self.section_generator = SectionGenerator(context)
         self.styles = getSampleStyleSheet()
+        self._setup_styles()
+    
+    def _setup_styles(self):
+        # Add custom styles safely
+        if 'Title' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='Title',
+                parent=self.styles['Normal'],
+                fontSize=24,
+                textColor=colors.darkblue,
+                alignment=TA_CENTER,
+                spaceAfter=30
+            ))
+        
+        if 'Heading1' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='Heading1',
+                parent=self.styles['Normal'],
+                fontSize=18,
+                textColor=colors.darkblue,
+                spaceAfter=20
+            ))
+        
+        if 'Heading2' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='Heading2',
+                parent=self.styles['Normal'],
+                fontSize=14,
+                textColor=colors.darkblue,
+                spaceAfter=12
+            ))
+        
+        if 'BodyText' not in self.styles:
+            self.styles.add(ParagraphStyle(
+                name='BodyText',
+                parent=self.styles['Normal'],
+                fontSize=10,
+                leading=14,
+                spaceAfter=8
+            ))
+    
+    def _create_table(self, data: List[List]) -> Table:
+        """Create a formatted table"""
+        table = Table(data, repeatRows=1)
+        
+        style = TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.grey),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('TOPPADDING', (0, 1), (-1, -1), 6),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ])
+        
+        table.setStyle(style)
+        return table
     
     def generate(self, output_path: str = "report.pdf") -> str:
         doc = SimpleDocTemplate(
@@ -36,137 +93,288 @@ class PDFGenerator:
         )
         
         content = []
-        content.extend(self.section_generator.get_cover_page())
+        
+        # Cover Page
+        content.extend(self._get_cover_page())
         content.append(PageBreak())
-        content.extend(self.section_generator.get_dataset_overview())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_quality_section())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_missing_values_section())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_outlier_section())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_eda_section())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_feature_engineering_section())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_automl_section())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_explainability_section())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_insights_section())
-        content.append(Spacer(1, 0.3 * inch))
-        content.extend(self.section_generator.get_appendix())
+        
+        # Dataset Overview
+        content.extend(self._get_dataset_overview())
+        content.append(Spacer(1, 0.2 * inch))
+        
+        # Quality Section
+        content.extend(self._get_quality_section())
+        content.append(Spacer(1, 0.2 * inch))
+        
+        # Missing Values
+        content.extend(self._get_missing_values_section())
+        content.append(Spacer(1, 0.2 * inch))
+        
+        # Model Section
+        content.extend(self._get_model_section())
+        content.append(Spacer(1, 0.2 * inch))
+        
+        # Insights Section
+        content.extend(self._get_insights_section())
         
         doc.build(content)
         return output_path
     
-    def generate_html(self) -> str:
-        """Generate HTML report"""
-        html = []
-        html.append("""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>AI Data Intelligence Report</title>
-            <meta charset="utf-8">
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
-                h1 { color: #1a237e; border-bottom: 3px solid #1a237e; padding-bottom: 10px; }
-                h2 { color: #283593; margin-top: 30px; border-bottom: 2px solid #e8eaf6; padding-bottom: 8px; }
-                h3 { color: #3949ab; margin-top: 20px; }
-                table { border-collapse: collapse; width: 100%; margin: 20px 0; }
-                th { background-color: #1a237e; color: white; padding: 10px; text-align: left; }
-                td { padding: 8px; border-bottom: 1px solid #ddd; }
-                tr:nth-child(even) { background-color: #f5f5f5; }
-                .summary { background-color: #e8eaf6; padding: 20px; border-radius: 5px; margin: 20px 0; }
-                .warning { color: #c62828; }
-                .success { color: #2e7d32; }
-                .card { background-color: white; border-radius: 8px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                .metric { display: inline-block; background: #f5f5f5; padding: 10px 20px; margin: 5px; border-radius: 5px; }
-                .metric-value { font-size: 24px; font-weight: bold; color: #1a237e; }
-                .metric-label { font-size: 12px; color: #666; }
-            </style>
-        </head>
-        <body>
-        """)
+    def _get_cover_page(self):
+        elements = []
+        elements.append(Spacer(1, 2 * inch))
+        elements.append(Paragraph("AI Data Intelligence Report", self.styles['Title']))
+        elements.append(Spacer(1, 0.3 * inch))
         
-        # Dataset Overview
+        dataset = self.context.get('dataset', {})
+        elements.append(Paragraph(f"Dataset: {dataset.get('file_name', 'Unknown')}", self.styles['BodyText']))
+        elements.append(Paragraph(f"Date: {datetime.now().strftime('%B %d, %Y')}", self.styles['BodyText']))
+        elements.append(Spacer(1, 2 * inch))
+        elements.append(Paragraph("Generated by AI Data Intelligence Platform", self.styles['BodyText']))
+        return elements
+    
+    def _get_dataset_overview(self):
+        elements = []
+        elements.append(Paragraph("Dataset Overview", self.styles['Heading1']))
+        elements.append(Spacer(1, 0.2 * inch))
+        
         dataset = self.context.get('dataset', {})
         shape = dataset.get('shape', {})
-        html.append("<h1>AI Data Intelligence Report</h1>")
-        html.append(f"<p><strong>Dataset:</strong> {dataset.get('file_name', 'Unknown')}</p>")
-        html.append(f"<p><strong>Generated:</strong> {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>")
         
-        html.append("<h2>Dataset Overview</h2>")
-        html.append(f"<div class='card'>")
-        html.append(f"<span class='metric'><span class='metric-value'>{shape.get('rows', 0)}</span><br><span class='metric-label'>Rows</span></span>")
-        html.append(f"<span class='metric'><span class='metric-value'>{shape.get('columns', 0)}</span><br><span class='metric-label'>Columns</span></span>")
-        html.append(f"</div>")
+        table_data = [
+            ['Property', 'Value'],
+            ['Rows', str(shape.get('rows', 0))],
+            ['Columns', str(shape.get('columns', 0))],
+            ['Numeric Columns', str(len(dataset.get('numeric_columns', [])))],
+            ['Categorical Columns', str(len(dataset.get('categorical_columns', [])))],
+            ['File Name', dataset.get('file_name', 'Unknown')]
+        ]
         
-        # Quality Score
+        table = self._create_table(table_data)
+        elements.append(table)
+        return elements
+    
+    def _get_quality_section(self):
+        elements = []
+        elements.append(Paragraph("Data Quality Analysis", self.styles['Heading1']))
+        elements.append(Spacer(1, 0.2 * inch))
+        
         validation = self.context.get('validation', {})
         quality = validation.get('quality', {})
         score = quality.get('quality_score', 0)
-        html.append(f"<h2>Data Quality Score: {score}/100</h2>")
         
-        # Warnings
+        table_data = [
+            ['Metric', 'Value', 'Status'],
+            ['Quality Score', f"{score}/100", 'Good' if score >= 70 else 'Needs Improvement'],
+            ['Total Warnings', str(quality.get('total_warnings', 0)), 'Review Required' if quality.get('total_warnings', 0) > 0 else 'None']
+        ]
+        
+        table = self._create_table(table_data)
+        elements.append(table)
+        elements.append(Spacer(1, 0.2 * inch))
+        
         warnings = quality.get('warnings', [])
         if warnings:
-            html.append("<h3>Warnings</h3><ul>")
-            for warning in warnings[:10]:
-                html.append(f"<li>{warning}</li>")
-            html.append("</ul>")
+            elements.append(Paragraph("Warnings:", self.styles['Heading2']))
+            for warning in warnings[:5]:
+                elements.append(Paragraph(f"• {warning}", self.styles['BodyText']))
         
-        # Insights
+        return elements
+    
+    def _get_missing_values_section(self):
+        elements = []
+        elements.append(Paragraph("Missing Values Analysis", self.styles['Heading1']))
+        elements.append(Spacer(1, 0.2 * inch))
+        
+        dataset = self.context.get('dataset', {})
+        missing = dataset.get('missing_values', {})
+        
+        table_data = [['Column', 'Missing Values', 'Percentage']]
+        has_missing = False
+        
+        for col, count in missing.items():
+            if count > 0:
+                has_missing = True
+                pct = dataset.get('missing_percentage', {}).get(col, 0)
+                table_data.append([col, str(count), f"{pct:.1f}%"])
+        
+        if not has_missing:
+            table_data.append(['No missing values found', '', ''])
+        
+        table = self._create_table(table_data)
+        elements.append(table)
+        return elements
+    
+    def _get_model_section(self):
+        elements = []
+        elements.append(Paragraph("AutoML Results", self.styles['Heading1']))
+        elements.append(Spacer(1, 0.2 * inch))
+        
+        automl = self.context.get('automl', {})
+        best = automl.get('best_model', {})
+        
+        if best:
+            elements.append(Paragraph(f"Best Model: {best.get('name', 'Unknown')}", self.styles['BodyText']))
+            elements.append(Paragraph(f"Score: {best.get('score', 0):.3f}", self.styles['BodyText']))
+            elements.append(Paragraph(f"CV Score: {best.get('cv_score', 0):.3f}", self.styles['BodyText']))
+            if best.get('reason'):
+                elements.append(Paragraph(f"Reason: {best.get('reason', 'N/A')}", self.styles['BodyText']))
+        
+        ranked = automl.get('ranked_models', [])
+        if ranked:
+            table_data = [['Rank', 'Model', 'Score']]
+            for model in ranked[:5]:
+                table_data.append([
+                    str(model.get('rank', '')),
+                    model.get('model_name', 'Unknown'),
+                    f"{model.get('score', 0):.3f}"
+                ])
+            table = self._create_table(table_data)
+            elements.append(table)
+        
+        return elements
+    
+    def _get_insights_section(self):
+        elements = []
+        elements.append(Paragraph("Business Insights", self.styles['Heading1']))
+        elements.append(Spacer(1, 0.2 * inch))
+        
         insights = self.context.get('insights', {})
         summary = insights.get('executive_summary', '')
+        
         if summary:
-            html.append(f"<div class='summary'><h2>Executive Summary</h2><p>{summary}</p></div>")
+            elements.append(Paragraph("Executive Summary:", self.styles['Heading2']))
+            elements.append(Paragraph(summary, self.styles['BodyText']))
+            elements.append(Spacer(1, 0.2 * inch))
+        
+        recommendations = insights.get('recommendations', [])
+        if recommendations:
+            elements.append(Paragraph("Key Recommendations:", self.styles['Heading2']))
+            for rec in recommendations[:5]:
+                elements.append(Paragraph(f"• {rec}", self.styles['BodyText']))
+        
+        health = insights.get('ai_health_score', {})
+        if health:
+            elements.append(Spacer(1, 0.2 * inch))
+            elements.append(Paragraph(
+                f"AI Health Score: {health.get('score', 0)}/100 ({health.get('confidence', 'Unknown')} Confidence)",
+                self.styles['BodyText']
+            ))
+        
+        return elements
+    
+    def generate_html(self) -> str:
+        """Generate properly formatted HTML report"""
+        dataset = self.context.get('dataset', {})
+        shape = dataset.get('shape', {})
+        validation = self.context.get('validation', {})
+        quality = validation.get('quality', {})
+        insights = self.context.get('insights', {})
+        automl = self.context.get('automl', {})
+        
+        html_parts = []
+        html_parts.append('<!DOCTYPE html>')
+        html_parts.append('<html>')
+        html_parts.append('<head>')
+        html_parts.append('    <title>AI Data Intelligence Report</title>')
+        html_parts.append('    <meta charset="utf-8">')
+        html_parts.append('    <style>')
+        html_parts.append('        body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }')
+        html_parts.append('        h1 { color: #1a237e; border-bottom: 3px solid #1a237e; padding-bottom: 10px; }')
+        html_parts.append('        h2 { color: #283593; margin-top: 30px; border-bottom: 2px solid #e8eaf6; padding-bottom: 8px; }')
+        html_parts.append('        h3 { color: #3949ab; margin-top: 20px; }')
+        html_parts.append('        table { border-collapse: collapse; width: 100%; margin: 20px 0; }')
+        html_parts.append('        th { background-color: #1a237e; color: white; padding: 10px; text-align: left; }')
+        html_parts.append('        td { padding: 8px; border-bottom: 1px solid #ddd; }')
+        html_parts.append('        tr:nth-child(even) { background-color: #f5f5f5; }')
+        html_parts.append('        .summary { background-color: #e8eaf6; padding: 20px; border-radius: 5px; margin: 20px 0; }')
+        html_parts.append('        .metric { display: inline-block; background: #f5f5f5; padding: 15px 25px; margin: 5px; border-radius: 5px; text-align: center; }')
+        html_parts.append('        .metric-value { font-size: 28px; font-weight: bold; color: #1a237e; }')
+        html_parts.append('        .metric-label { font-size: 12px; color: #666; }')
+        html_parts.append('    </style>')
+        html_parts.append('</head>')
+        html_parts.append('<body>')
+        html_parts.append(f'    <h1>AI Data Intelligence Report</h1>')
+        html_parts.append(f'    <p><strong>Dataset:</strong> {dataset.get("file_name", "Unknown")}</p>')
+        html_parts.append(f'    <p><strong>Generated:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</p>')
+        
+        # Executive Summary
+        html_parts.append('    <div class="summary">')
+        html_parts.append('        <h2>Executive Summary</h2>')
+        html_parts.append(f'        <p>{insights.get("executive_summary", "No summary available.")}</p>')
+        html_parts.append('    </div>')
+        
+        # Dataset Overview
+        html_parts.append('    <h2>Dataset Overview</h2>')
+        html_parts.append('    <div>')
+        html_parts.append(f'        <span class="metric"><div class="metric-value">{shape.get("rows", 0)}</div><div class="metric-label">Rows</div></span>')
+        html_parts.append(f'        <span class="metric"><div class="metric-value">{shape.get("columns", 0)}</div><div class="metric-label">Columns</div></span>')
+        html_parts.append(f'        <span class="metric"><div class="metric-value">{quality.get("quality_score", 0)}/100</div><div class="metric-label">Quality Score</div></span>')
+        html_parts.append(f'        <span class="metric"><div class="metric-value">{automl.get("best_model", {}).get("name", "N/A")}</div><div class="metric-label">Best Model</div></span>')
+        html_parts.append('    </div>')
+        
+        # Data Quality
+        html_parts.append('    <h2>Data Quality</h2>')
+        html_parts.append(f'    <p>Quality Score: <strong>{quality.get("quality_score", 0)}/100</strong></p>')
+        html_parts.append(f'    <p>Warnings: <strong>{quality.get("total_warnings", 0)}</strong></p>')
         
         # Recommendations
         recommendations = insights.get('recommendations', [])
         if recommendations:
-            html.append("<h2>Recommendations</h2><ul>")
+            html_parts.append('    <h2>Recommendations</h2>')
+            html_parts.append('    <ul>')
             for rec in recommendations[:5]:
-                html.append(f"<li>{rec}</li>")
-            html.append("</ul>")
+                html_parts.append(f'        <li>{rec}</li>')
+            html_parts.append('    </ul>')
         
-        html.append("</body></html>")
-        return "\n".join(html)
+        # Model Performance
+        ranked = automl.get('ranked_models', [])
+        if ranked:
+            html_parts.append('    <h2>Model Performance</h2>')
+            html_parts.append('    <table>')
+            html_parts.append('        <tr><th>Rank</th><th>Model</th><th>Score</th></tr>')
+            for model in ranked[:5]:
+                html_parts.append(f'        <tr>')
+                html_parts.append(f'            <td>{model.get("rank", "")}</td>')
+                html_parts.append(f'            <td>{model.get("model_name", "Unknown")}</td>')
+                html_parts.append(f'            <td>{model.get("score", 0):.3f}</td>')
+                html_parts.append(f'        </tr>')
+            html_parts.append('    </table>')
+        
+        health = insights.get('ai_health_score', {})
+        if health:
+            html_parts.append(f'    <h2>AI Health Score</h2>')
+            html_parts.append(f'    <p><strong>{health.get("score", 0)}/100</strong> - {health.get("confidence", "Unknown")} Confidence</p>')
+        
+        html_parts.append('    <hr>')
+        html_parts.append(f'    <p style="text-align: center; color: #999; font-size: 12px;">')
+        html_parts.append(f'        Generated by AI Data Intelligence Platform • {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
+        html_parts.append(f'    </p>')
+        html_parts.append('</body>')
+        html_parts.append('</html>')
+        
+        return "\n".join(html_parts)
     
     def generate_markdown(self) -> str:
         """Generate Markdown report"""
-        md = []
-        
         dataset = self.context.get('dataset', {})
         shape = dataset.get('shape', {})
+        quality = self.context.get('validation', {}).get('quality', {})
+        insights = self.context.get('insights', {})
+        automl = self.context.get('automl', {})
         
+        md = []
         md.append("# AI Data Intelligence Report\n")
         md.append(f"**Dataset:** {dataset.get('file_name', 'Unknown')}\n")
         md.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
         
+        md.append("## Executive Summary\n")
+        md.append(f"{insights.get('executive_summary', 'No summary available.')}\n")
+        
         md.append("## Dataset Overview\n")
         md.append(f"- **Rows:** {shape.get('rows', 0)}")
-        md.append(f"- **Columns:** {shape.get('columns', 0)}\n")
-        
-        validation = self.context.get('validation', {})
-        quality = validation.get('quality', {})
-        score = quality.get('quality_score', 0)
-        md.append(f"## Data Quality Score: {score}/100\n")
-        
-        warnings = quality.get('warnings', [])
-        if warnings:
-            md.append("### Warnings\n")
-            for warning in warnings[:10]:
-                md.append(f"- {warning}")
-            md.append("")
-        
-        insights = self.context.get('insights', {})
-        summary = insights.get('executive_summary', '')
-        if summary:
-            md.append("## Executive Summary\n")
-            md.append(f"{summary}\n")
+        md.append(f"- **Columns:** {shape.get('columns', 0)}")
+        md.append(f"- **Quality Score:** {quality.get('quality_score', 0)}/100\n")
         
         recommendations = insights.get('recommendations', [])
         if recommendations:
@@ -174,6 +382,18 @@ class PDFGenerator:
             for rec in recommendations[:5]:
                 md.append(f"- {rec}")
             md.append("")
+        
+        ranked = automl.get('ranked_models', [])
+        if ranked:
+            md.append("## Model Performance\n")
+            md.append("| Rank | Model | Score |")
+            md.append("|------|-------|-------|")
+            for model in ranked[:5]:
+                md.append(f"| {model.get('rank', '')} | {model.get('model_name', 'Unknown')} | {model.get('score', 0):.3f} |")
+        
+        health = insights.get('ai_health_score', {})
+        if health:
+            md.append(f"\n## AI Health Score: {health.get('score', 0)}/100 ({health.get('confidence', 'Unknown')} Confidence)\n")
         
         return "\n".join(md)
 

@@ -33,7 +33,6 @@ class BusinessRules:
         """Generate EDA insights"""
         insights = []
         
-        # Correlation insights
         strong_corrs = eda_results.get('correlation', {}).get('strong_correlations', {})
         strong_list = strong_corrs.get('strong_correlations', [])
         
@@ -44,7 +43,6 @@ class BusinessRules:
                     f"(correlation: {corr['correlation']:.2f})."
                 )
         
-        # Distribution insights
         distributions = eda_results.get('distributions', {}).get('numeric', {})
         distributions_data = distributions.get('numeric_distributions', {})
         
@@ -58,41 +56,18 @@ class BusinessRules:
     
     @staticmethod
     def get_model_insight(automl_results: Dict[str, Any]) -> List[str]:
-        """Generate model insights - FIXED to use correct best model"""
+        """Generate model insights"""
         insights = []
         
         if not automl_results:
             return ["No model training results available."]
         
-        # Get best model - FIXED to read from correct location
         best_model = automl_results.get('best_model', {})
-        model_name = best_model.get('name', 'Unknown')
-        model_score = best_model.get('score', 0)
-        
-        if model_name != 'Unknown' and model_score > 0:
-            # Determine performance level
-            if model_score >= 0.9:
-                performance = "excellent"
-            elif model_score >= 0.7:
-                performance = "good"
-            elif model_score >= 0.5:
-                performance = "moderate"
-            else:
-                performance = "below expectations"
-            
+        if best_model:
             insights.append(
-                f"Best performing model: {model_name} "
-                f"with {performance} performance (score: {model_score:.3f})."
+                f"Best performing model: {best_model.get('name', 'Unknown')} "
+                f"(score: {best_model.get('score', 0):.3f})."
             )
-        else:
-            # Try to get from ranked models
-            ranked = automl_results.get('ranked_models', [])
-            if ranked:
-                top_model = ranked[0]
-                insights.append(
-                    f"Top ranked model: {top_model.get('model_name', 'Unknown')} "
-                    f"(score: {top_model.get('score', 0):.3f})."
-                )
         
         models_trained = automl_results.get('models_trained', 0)
         if models_trained > 0:
@@ -108,7 +83,6 @@ class BusinessRules:
         if not explainability_results:
             return ["No explainability data available."]
         
-        # Feature importance
         importance = explainability_results.get('feature_importance', {})
         if importance:
             sorted_importance = sorted(importance.items(), key=lambda x: x[1], reverse=True)
@@ -119,11 +93,6 @@ class BusinessRules:
                 insights.append(
                     f"Key drivers: {', '.join(feature_names)} have the strongest influence on predictions."
                 )
-        
-        # SHAP availability
-        shap_available = explainability_results.get('shap_available', False)
-        if not shap_available:
-            insights.append("SHAP not installed. Install SHAP for more detailed explanations.")
         
         return insights
     
@@ -140,16 +109,11 @@ class BusinessRules:
         if warnings and len(warnings) > 5:
             risks.append(f"Multiple warnings ({len(warnings)}) indicate potential data quality issues.")
         
-        # Model risks - FIXED to use correct best model
         best_model = automl_results.get('best_model', {})
         score = best_model.get('score', 0)
         if score < 0.6 and score > 0:
             risks.append("Model performance is below acceptable threshold.")
-        elif score == 0:
-            # No model found
-            risks.append("No model has been trained yet. Train models to assess performance.")
         
-        # Check for critical warnings
         for warning in warnings:
             if "infinite" in warning.lower() or "constant" in warning.lower():
                 risks.append("Data contains problematic values that may affect model performance.")
@@ -171,7 +135,6 @@ class BusinessRules:
             if models_trained > 0:
                 strengths.append(f"Successfully trained {models_trained} models.")
                 
-                # Check if we have a best model
                 best_model = automl_results.get('best_model', {})
                 if best_model.get('name'):
                     strengths.append(f"Best model identified: {best_model.get('name')}.")
@@ -195,10 +158,10 @@ class BusinessRules:
         if len(warnings) > 3:
             weaknesses.append(f"{len(warnings)} data quality warnings present.")
         
-        if not shap_available:
-            weaknesses.append("SHAP not available for detailed model explanations.")
+        # Only mention SHAP if it's actually relevant
+        if not shap_available and automl_results.get('models_trained', 0) > 0:
+            weaknesses.append("Detailed model explanations not available.")
         
-        # Check if model performance is low
         best_model = automl_results.get('best_model', {})
         score = best_model.get('score', 0)
         if score < 0.7 and score > 0:

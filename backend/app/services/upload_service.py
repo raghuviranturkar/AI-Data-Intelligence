@@ -1,6 +1,5 @@
 """
-Upload Service
-Handles file upload and processing
+Upload Service with Data Validation and Report Storage
 """
 import os
 import shutil
@@ -8,24 +7,20 @@ from typing import Dict, Any
 from datetime import datetime
 from fastapi import UploadFile
 import pandas as pd
-import json
+import numpy as np
 import traceback
 
 from .pipeline import run_pipeline
-from ..utils.json_encoder import NumpyJSONEncoder
+from .data_validator import DataPreValidator
+from .report_storage import store_results
 
 
 class UploadService:
-    """Service for handling file uploads"""
-    
     def __init__(self, upload_dir: str = "uploads"):
         self.upload_dir = upload_dir
         os.makedirs(upload_dir, exist_ok=True)
     
     async def process_upload(self, file: UploadFile) -> Dict[str, Any]:
-        """
-        Process uploaded file using the complete pipeline
-        """
         # Validate file type
         allowed_extensions = {'.csv', '.xlsx', '.xls'}
         file_extension = os.path.splitext(file.filename)[1].lower()
@@ -60,21 +55,30 @@ class UploadService:
             
             print(f"📊 Loaded dataset: {len(df)} rows, {len(df.columns)} columns")
             
-            # Check if dataset is too small
-            if len(df) < 2:
-                raise ValueError(f"Dataset has only {len(df)} rows. Minimum 2 rows required for analysis.")
+            # Pre-validate the data
+            is_valid, errors = DataPreValidator.validate_file(df, file.filename)
             
-            # Check for required columns
-            if len(df.columns) < 2:
-                raise ValueError(f"Dataset has only {len(df.columns)} columns. Minimum 2 columns required.")
+            if not is_valid:
+                # Clean up file
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                
+                error_message = "The dataset has the following issues:\n" + "\n".join([f"• {e}" for e in errors])
+                raise ValueError(error_message)
             
             # Run pipeline
             results = run_pipeline(df, file.filename)
             
             # Add file path to results
             results["file_path"] = file_path
+            results["file_name"] = file.filename
+            
+            # Store results for report generation
+            session_id = store_results(results)
+            results["session_id"] = session_id
             
             print("✅ Pipeline complete!")
+            print(f"📄 Report session ID: {session_id}")
             return results
             
         except ValueError as e:
