@@ -21,23 +21,23 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
 
   const variantColors = {
-    default: 'bg-primary-600',
-    success: 'bg-success-500',
-    warning: 'bg-warning-500',
-    danger: 'bg-danger-500',
+    default: 'bg-primary-600 dark:bg-primary-500',
+    success: 'bg-success-500 dark:bg-success-400',
+    warning: 'bg-warning-500 dark:bg-warning-400',
+    danger: 'bg-danger-500 dark:bg-danger-400',
   }
 
   return (
     <div className={cn('w-full', className)}>
       <div className="flex items-center justify-between mb-1">
-        {label && <span className="text-sm font-medium text-gray-700">{label}</span>}
+        {label && <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>}
         {showLabel && (
-          <span className="text-sm font-medium text-gray-500">{Math.round(percentage)}%</span>
+          <span className="text-sm font-medium text-gray-500 dark:text-gray-400">{Math.round(percentage)}%</span>
         )}
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+      <div className="progress-bar">
         <div
-          className={`h-2.5 rounded-full transition-all duration-500 ease-out ${variantColors[variant]}`}
+          className={`progress-bar-fill ${variantColors[variant]}`}
           style={{ width: `${percentage}%` }}
         />
       </div>

@@ -1,6 +1,38 @@
 export const colors = {
-  background: '#F8FAFC',
-  sidebar: '#FFFFFF',
+  light: {
+    background: {
+      page: '#F8FAFC',
+      card: '#FFFFFF',
+      sidebar: '#FFFFFF',
+      header: '#FFFFFF',
+      hover: '#F1F5F9',
+    },
+    text: {
+      primary: '#0F172A',
+      secondary: '#475569',
+      muted: '#94A3B8',
+      disabled: '#CBD5E1',
+    },
+    border: '#E2E8F0',
+    shadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
+  },
+  dark: {
+    background: {
+      page: '#0F172A',
+      card: '#1E293B',
+      sidebar: '#111827',
+      header: '#111827',
+      hover: '#334155',
+    },
+    text: {
+      primary: '#F8FAFC',
+      secondary: '#CBD5E1',
+      muted: '#94A3B8',
+      disabled: '#64748B',
+    },
+    border: '#334155',
+    shadow: '0 1px 3px 0 rgb(0 0 0 / 0.3), 0 1px 2px -1px rgb(0 0 0 / 0.2)',
+  },
   primary: {
     50: '#EEF2FF',
     100: '#E0E7FF',
@@ -15,18 +47,39 @@ export const colors = {
   },
   success: {
     50: '#F0FDF4',
+    100: '#DCFCE7',
+    200: '#BBF7D0',
+    300: '#86EFAC',
+    400: '#4ADE80',
     500: '#22C55E',
     600: '#16A34A',
+    700: '#15803D',
+    800: '#166534',
+    900: '#14532D',
   },
   warning: {
     50: '#FFFBEB',
+    100: '#FEF3C7',
+    200: '#FDE68A',
+    300: '#FCD34D',
+    400: '#FBBF24',
     500: '#F59E0B',
     600: '#D97706',
+    700: '#B45309',
+    800: '#92400E',
+    900: '#78350F',
   },
   danger: {
     50: '#FEF2F2',
+    100: '#FEE2E2',
+    200: '#FECACA',
+    300: '#FCA5A5',
+    400: '#F87171',
     500: '#EF4444',
     600: '#DC2626',
+    700: '#B91C1C',
+    800: '#991B1B',
+    900: '#7F1D1D',
   },
   gray: {
     50: '#F9FAFB',
@@ -73,10 +126,18 @@ export const spacing = {
 }
 
 export const shadows = {
-  sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-  md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-  lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-  xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+  light: {
+    sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
+    md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+    lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+    xl: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+  },
+  dark: {
+    sm: '0 1px 2px 0 rgb(0 0 0 / 0.3)',
+    md: '0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3)',
+    lg: '0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3)',
+    xl: '0 20px 25px -5px rgb(0 0 0 / 0.4), 0 8px 10px -6px rgb(0 0 0 / 0.3)',
+  },
 }
 
 export const borderRadius = {

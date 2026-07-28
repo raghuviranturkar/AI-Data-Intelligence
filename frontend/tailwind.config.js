@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -55,14 +56,18 @@ export default {
           800: '#991B1B',
           900: '#7F1D1D',
         },
-        border: '#E5E7EB',
       },
-      borderRadius: {
-        xl: '0.75rem',
-        '2xl': '1rem',
+      backgroundColor: {
+        dark: '#0F172A',
+        'dark-card': '#1E293B',
+        'dark-hover': '#334155',
       },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      borderColor: {
+        dark: '#334155',
+      },
+      textColor: {
+        dark: '#E2E8F0',
+        'dark-secondary': '#94A3B8',
       },
     },
   },
