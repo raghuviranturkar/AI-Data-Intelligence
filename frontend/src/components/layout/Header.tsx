@@ -1,15 +1,22 @@
 import React from 'react'
-import { Bell, User } from 'lucide-react'
+import { Bell, User, Menu } from 'lucide-react'
 import { Badge } from '../common/Badge'
 import ThemeToggle from '../common/ThemeToggle'
+import { cn } from '../../utils/cn'
 
 interface HeaderProps {
+  collapsed: boolean
   title?: string
 }
 
-const Header: React.FC<HeaderProps> = ({ title = 'Dashboard' }) => {
+const Header: React.FC<HeaderProps> = ({ collapsed, title = 'Dashboard' }) => {
   return (
-    <header className="fixed left-64 right-0 top-0 z-30 h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-colors duration-300">
+    <header 
+      className={cn(
+        'fixed top-0 z-30 h-16 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800 transition-all duration-300 ease-in-out',
+        collapsed ? 'left-16' : 'left-64'
+      )}
+    >
       <div className="flex h-full items-center justify-between px-6">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white transition-colors duration-300">

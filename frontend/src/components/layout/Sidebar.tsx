@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { 
   LayoutDashboard, 
@@ -9,12 +9,15 @@ import {
   Settings,
   Database,
   TrendingUp,
-  ChevronLeft,
-  ChevronRight,
   Shield,
   Lightbulb
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
+
+interface SidebarProps {
+  collapsed: boolean
+  setCollapsed: (collapsed: boolean) => void
+}
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
@@ -28,16 +31,8 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
-const Sidebar: React.FC = () => {
+const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => {
   const location = useLocation()
-  const [collapsed, setCollapsed] = useState(() => {
-    const saved = localStorage.getItem('sidebar-collapsed')
-    return saved ? JSON.parse(saved) : false
-  })
-
-  useEffect(() => {
-    localStorage.setItem('sidebar-collapsed', JSON.stringify(collapsed))
-  }, [collapsed])
 
   return (
     <aside 
@@ -46,54 +41,45 @@ const Sidebar: React.FC = () => {
         collapsed ? 'w-16' : 'w-64'
       )}
     >
-      <div className="flex h-full flex-col">
-        {/* Logo */}
-        <div className={cn(
-          'flex h-16 items-center border-b border-gray-200 dark:border-gray-800 transition-all duration-300',
-          collapsed ? 'justify-center px-2' : 'gap-2 px-6'
-        )}>
+      <div className="flex h-full flex-col overflow-hidden">
+        {/* Logo - Click to toggle */}
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            'flex h-16 items-center border-b border-gray-200 dark:border-gray-800 transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800 w-full',
+            collapsed ? 'justify-center px-2' : 'gap-2 px-6'
+          )}
+        >
           <Database className="h-8 w-8 text-primary-600 flex-shrink-0" />
           {!collapsed && (
             <span className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">AI Data Intel</span>
           )}
-        </div>
-
-        {/* Collapse Toggle */}
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            'absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 hover:scale-110',
-            collapsed && 'rotate-180'
-          )}
-        >
-          <ChevronLeft className="h-3 w-3" />
         </button>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 px-2 py-4 overflow-y-auto">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={cn(
-                  'sidebar-link relative',
-                  isActive && 'active',
-                  collapsed && 'justify-center px-0'
-                )}
-                title={collapsed ? item.name : undefined}
-              >
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
-                {collapsed && (
-                  <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-                    {item.name}
-                  </div>
-                )}
-              </Link>
-            )
-          })}
+        <nav className="flex-1 overflow-y-auto py-4">
+          <div className="space-y-1 px-2">
+            {navigation.map((item) => {
+              const isActive = location.pathname === item.href
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    'flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group',
+                    isActive
+                      ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white',
+                    collapsed ? 'justify-center px-0' : 'gap-3'
+                  )}
+                  title={collapsed ? item.name : undefined}
+                >
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {!collapsed && <span className="whitespace-nowrap">{item.name}</span>}
+                </Link>
+              )
+            })}
+          </div>
         </nav>
 
         {/* Footer */}
