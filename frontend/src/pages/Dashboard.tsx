@@ -106,20 +106,17 @@ const Dashboard: React.FC = () => {
   const warnings = validation?.quality?.total_warnings || 0
   const duplicateRows = dataset?.duplicate_rows || 0
 
-  // Feature importance data
   const featureImportance = explainability?.feature_ranking?.map((item: any) => ({
     feature: item.feature,
     importance: item.importance
   })) || []
 
-  // Model comparison data
   const modelComparison = automl?.ranked_models?.map((model: any) => ({
     model: model.model_name,
     score: model.score,
     cvScore: model.cv_score || 0
   })) || []
 
-  // Model leaderboard data
   const leaderboardData = automl?.ranked_models?.map((model: any) => ({
     rank: model.rank,
     model_name: model.model_name,
@@ -127,7 +124,6 @@ const Dashboard: React.FC = () => {
     cv_score: model.cv_score || 0
   })) || []
 
-  // Missing values data
   const missingValuesData = Object.entries(dataset?.missing_values || {}).map(([column, count]) => ({
     column,
     missing: count as number,
@@ -135,7 +131,6 @@ const Dashboard: React.FC = () => {
     percentage: rows > 0 ? ((count as number) / rows) * 100 : 0
   }))
 
-  // Outlier data
   const outlierData = Object.entries(outliers?.analysis || {}).map(([column, info]: [string, any]) => ({
     column,
     outlier_count: info?.outlier_analysis?.outlier_count || 0,
@@ -143,10 +138,8 @@ const Dashboard: React.FC = () => {
     severity: info?.severity || 'None'
   }))
 
-  // Correlation matrix data
   const correlationData = data?.eda?.correlation?.matrix?.matrix || {}
 
-  // Dataset overview
   const numericFeatures = dataset?.numeric_columns?.length || 0
   const categoricalFeatures = dataset?.categorical_columns?.length || 0
   const missingCells = Object.values(dataset?.missing_values || {}).reduce((a: number, b: number) => a + b, 0)
@@ -154,7 +147,6 @@ const Dashboard: React.FC = () => {
     ? `${dataset.memory_usage.megabytes.toFixed(2)} MB` 
     : 'N/A'
 
-  // ML Readiness
   const readiness = validation?.validation?.readiness?.status || 'Unknown'
 
   return (
@@ -192,7 +184,6 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
-      {/* Dataset Overview */}
       <DatasetOverview
         rows={rows}
         columns={columns}
@@ -204,22 +195,18 @@ const Dashboard: React.FC = () => {
         mlReadiness={readiness}
       />
 
-      {/* Correlation Heatmap */}
       <CorrelationHeatmap data={correlationData} />
 
-      {/* Two Column: Feature Importance + Model Leaderboard */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <FeatureImportanceChart data={featureImportance} />
         <ModelLeaderboard data={leaderboardData} />
       </div>
 
-      {/* Two Column: Missing Values + Outlier Analysis */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <MissingValuesChart data={missingValuesData} />
         <OutlierChart data={outlierData} />
       </div>
 
-      {/* Insights Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {insights?.executive_summary && (
           <InsightCard
