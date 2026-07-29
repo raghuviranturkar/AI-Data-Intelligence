@@ -1,3 +1,6 @@
 export { default as FeatureImportanceChart } from './FeatureImportanceChart'
 export { default as ModelComparisonChart } from './ModelComparisonChart'
 export { default as CorrelationHeatmap } from './CorrelationHeatmap'
+export { default as MissingValuesChart } from './MissingValuesChart'
+export { default as OutlierChart } from './OutlierChart'
+export { default as ModelLeaderboard } from './ModelLeaderboard'

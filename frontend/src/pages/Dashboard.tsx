@@ -4,7 +4,6 @@ import {
   Activity, 
   Brain,
   TrendingUp,
-  TrendingDown,
   CheckCircle,
   AlertTriangle,
   FileText,
@@ -12,23 +11,31 @@ import {
   Shield,
   Lightbulb,
   Loader2,
-  Database
+  Database,
+  BarChart3
 } from 'lucide-react'
 import Card from '../components/common/Card'
 import MetricCard from '../components/cards/MetricCard'
 import InsightCard from '../components/cards/InsightCard'
 import HorizontalPipeline from '../components/pipeline/HorizontalPipeline'
 import { Button } from '../components/common/Button'
-import { FeatureImportanceChart, ModelComparisonChart } from '../components/charts'
+import { 
+  FeatureImportanceChart, 
+  ModelComparisonChart,
+  CorrelationHeatmap,
+  MissingValuesChart,
+  OutlierChart,
+  ModelLeaderboard
+} from '../components/charts'
+import DatasetOverview from '../components/dashboard/DatasetOverview'
 import { useData } from '../context/DataContext'
-import EmptyState from '../components/common/EmptyState'
 
 const sampleStages = [
   { id: 'upload', label: 'Upload', icon: <Database className="h-6 w-6" />, status: 'completed' as const },
   { id: 'validation', label: 'Validation', icon: <CheckCircle className="h-6 w-6" />, status: 'completed' as const },
   { id: 'cleaning', label: 'Cleaning', icon: <Activity className="h-6 w-6" />, status: 'completed' as const },
   { id: 'eda', label: 'EDA', icon: <TrendingUp className="h-6 w-6" />, status: 'completed' as const },
-  { id: 'feature_engineering', label: 'Feature Eng.', icon: <Brain className="h-6 w-6" />, status: 'completed' as const },
+  { id: 'feature_engineering', label: 'Feature Eng.', icon: <BarChart3 className="h-6 w-6" />, status: 'completed' as const },
   { id: 'automl', label: 'AutoML', icon: <Brain className="h-6 w-6" />, status: 'completed' as const },
   { id: 'explainability', label: 'Explainability', icon: <Shield className="h-6 w-6" />, status: 'completed' as const },
   { id: 'insights', label: 'AI Insights', icon: <Lightbulb className="h-6 w-6" />, status: 'completed' as const },
@@ -38,7 +45,6 @@ const sampleStages = [
 const Dashboard: React.FC = () => {
   const { data, isLoading, error } = useData()
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -48,7 +54,6 @@ const Dashboard: React.FC = () => {
     )
   }
 
-  // Error state
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh]">
@@ -62,7 +67,6 @@ const Dashboard: React.FC = () => {
     )
   }
 
-  // Empty state - No icon, just clean text
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
@@ -90,6 +94,7 @@ const Dashboard: React.FC = () => {
     risks: [] 
   }
   const explainability = data?.explainability || { feature_importance: {}, feature_ranking: [] }
+  const outliers = data?.outliers || { analysis: {}, summary: {} }
 
   const qualityScore = validation?.quality?.quality_score || 0
   const healthScore = insights?.ai_health_score?.score || 0
@@ -99,17 +104,58 @@ const Dashboard: React.FC = () => {
   const rows = dataset?.shape?.rows || 0
   const columns = dataset?.shape?.columns || 0
   const warnings = validation?.quality?.total_warnings || 0
+  const duplicateRows = dataset?.duplicate_rows || 0
 
+  // Feature importance data
   const featureImportance = explainability?.feature_ranking?.map((item: any) => ({
     feature: item.feature,
     importance: item.importance
   })) || []
 
+  // Model comparison data
   const modelComparison = automl?.ranked_models?.map((model: any) => ({
     model: model.model_name,
     score: model.score,
     cvScore: model.cv_score || 0
   })) || []
+
+  // Model leaderboard data
+  const leaderboardData = automl?.ranked_models?.map((model: any) => ({
+    rank: model.rank,
+    model_name: model.model_name,
+    score: model.score,
+    cv_score: model.cv_score || 0
+  })) || []
+
+  // Missing values data
+  const missingValuesData = Object.entries(dataset?.missing_values || {}).map(([column, count]) => ({
+    column,
+    missing: count as number,
+    total: rows,
+    percentage: rows > 0 ? ((count as number) / rows) * 100 : 0
+  }))
+
+  // Outlier data
+  const outlierData = Object.entries(outliers?.analysis || {}).map(([column, info]: [string, any]) => ({
+    column,
+    outlier_count: info?.outlier_analysis?.outlier_count || 0,
+    outlier_percentage: info?.outlier_analysis?.outlier_percentage || 0,
+    severity: info?.severity || 'None'
+  }))
+
+  // Correlation matrix data
+  const correlationData = data?.eda?.correlation?.matrix?.matrix || {}
+
+  // Dataset overview
+  const numericFeatures = dataset?.numeric_columns?.length || 0
+  const categoricalFeatures = dataset?.categorical_columns?.length || 0
+  const missingCells = Object.values(dataset?.missing_values || {}).reduce((a: number, b: number) => a + b, 0)
+  const memoryUsage = dataset?.memory_usage?.megabytes 
+    ? `${dataset.memory_usage.megabytes.toFixed(2)} MB` 
+    : 'N/A'
+
+  // ML Readiness
+  const readiness = validation?.validation?.readiness?.status || 'Unknown'
 
   return (
     <div className="space-y-6">
@@ -146,23 +192,34 @@ const Dashboard: React.FC = () => {
         />
       </div>
 
+      {/* Dataset Overview */}
+      <DatasetOverview
+        rows={rows}
+        columns={columns}
+        numericFeatures={numericFeatures}
+        categoricalFeatures={categoricalFeatures}
+        duplicateRows={duplicateRows}
+        missingCells={missingCells}
+        memoryUsage={memoryUsage}
+        mlReadiness={readiness}
+      />
+
+      {/* Correlation Heatmap */}
+      <CorrelationHeatmap data={correlationData} />
+
+      {/* Two Column: Feature Importance + Model Leaderboard */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {featureImportance.length > 0 ? (
-          <FeatureImportanceChart data={featureImportance} />
-        ) : (
-          <Card className="flex items-center justify-center h-[350px]">
-            <p className="text-gray-400 dark:text-gray-500">No feature importance data available</p>
-          </Card>
-        )}
-        {modelComparison.length > 0 ? (
-          <ModelComparisonChart data={modelComparison} />
-        ) : (
-          <Card className="flex items-center justify-center h-[350px]">
-            <p className="text-gray-400 dark:text-gray-500">No model comparison data available</p>
-          </Card>
-        )}
+        <FeatureImportanceChart data={featureImportance} />
+        <ModelLeaderboard data={leaderboardData} />
       </div>
 
+      {/* Two Column: Missing Values + Outlier Analysis */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <MissingValuesChart data={missingValuesData} />
+        <OutlierChart data={outlierData} />
+      </div>
+
+      {/* Insights Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {insights?.executive_summary && (
           <InsightCard
@@ -184,31 +241,6 @@ const Dashboard: React.FC = () => {
               { label: 'Total Recommendations', value: insights.recommendations.length.toString() }
             ]}
             footer="Actionable insights for your data pipeline"
-          />
-        )}
-
-        {insights?.strengths && insights.strengths.length > 0 && (
-          <InsightCard
-            title="Strengths"
-            description={insights.strengths.join('. ')}
-            type="positive"
-            severity="low"
-            metadata={[
-              { label: 'Total Strengths', value: insights.strengths.length.toString() }
-            ]}
-          />
-        )}
-
-        {(insights?.weaknesses?.length > 0 || insights?.risks?.length > 0) && (
-          <InsightCard
-            title="Areas for Improvement"
-            description={[...(insights.weaknesses || []), ...(insights.risks || [])].join('. ')}
-            type="negative"
-            severity="medium"
-            metadata={[
-              { label: 'Issues Found', value: ((insights.weaknesses?.length || 0) + (insights.risks?.length || 0)).toString() }
-            ]}
-            footer="Consider addressing these for better results"
           />
         )}
       </div>
