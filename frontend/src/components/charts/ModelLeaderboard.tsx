@@ -1,7 +1,15 @@
 import React from 'react'
-import { Trophy, Award, Medal, TrendingUp, TrendingDown } from 'lucide-react'
+import { Trophy, Award, Medal, TrendingUp, TrendingDown, Eye } from 'lucide-react'
 import { Badge } from '../common/Badge'
-import { useTheme } from '../../context/ThemeContext'
+import { Button } from '../common/Button'
+
+interface ModelData {
+  rank: number
+ cat > src/components/charts/ModelLeaderboard.tsx << 'EOF'
+import React from 'react'
+import { Trophy, Award, Medal, TrendingUp, TrendingDown, Eye } from 'lucide-react'
+import { Badge } from '../common/Badge'
+import { Button } from '../common/Button'
 
 interface ModelData {
   rank: number
@@ -13,15 +21,14 @@ interface ModelData {
 interface ModelLeaderboardProps {
   data: ModelData[]
   title?: string
+  onViewModel?: (model: ModelData) => void
 }
 
 const ModelLeaderboard: React.FC<ModelLeaderboardProps> = ({
   data,
   title = 'Model Performance Leaderboard',
+  onViewModel,
 }) => {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
-
   const getRankIcon = (rank: number) => {
     switch (rank) {
       case 1: return <Trophy className="h-5 w-5 text-yellow-500" />
@@ -64,6 +71,7 @@ const ModelLeaderboard: React.FC<ModelLeaderboardProps> = ({
               <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Score</th>
               <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">CV Score</th>
               <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Status</th>
+              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -100,6 +108,16 @@ const ModelLeaderboard: React.FC<ModelLeaderboardProps> = ({
                     <Badge variant={status.color} size="sm">
                       {status.label}
                     </Badge>
+                  </td>
+                  <td className="px-3 py-3 text-center">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      icon={<Eye className="h-4 w-4" />}
+                      onClick={() => onViewModel?.(model)}
+                    >
+                      View
+                    </Button>
                   </td>
                 </tr>
               )
