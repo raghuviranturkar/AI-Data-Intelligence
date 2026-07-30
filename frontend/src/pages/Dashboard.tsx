@@ -31,7 +31,8 @@ import {
 import DatasetOverview from '../components/dashboard/DatasetOverview'
 import ReportCenter from '../components/reports/ReportCenter'
 import ModelDetailsModal from '../components/models/ModelDetailsModal'
-import AnalysisTimeline, { TimelineStep } from '../components/timeline/AnalysisTimeline'
+import AnalysisTimeline from '../components/timeline/AnalysisTimeline'
+import type { TimelineStep } from '../components/timeline/AnalysisTimeline'
 import AnalysisSessionSummary from '../components/summary/AnalysisSessionSummary'
 import { useData } from '../context/DataContext'
 
@@ -65,7 +66,6 @@ const Dashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleViewModel = (model: any) => {
-    // Create detailed model info
     const detailedModel = {
       name: model.model_name,
       rank: model.rank,

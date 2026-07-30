@@ -1,13 +1,5 @@
 import React from 'react'
-import { Trophy, Award, Medal, TrendingUp, TrendingDown, Eye } from 'lucide-react'
-import { Badge } from '../common/Badge'
-import { Button } from '../common/Button'
-
-interface ModelData {
-  rank: number
- cat > src/components/charts/ModelLeaderboard.tsx << 'EOF'
-import React from 'react'
-import { Trophy, Award, Medal, TrendingUp, TrendingDown, Eye } from 'lucide-react'
+import { Trophy, Award, Medal, Eye } from 'lucide-react'
 import { Badge } from '../common/Badge'
 import { Button } from '../common/Button'
 
