@@ -11,7 +11,8 @@ import {
   TrendingUp,
   Shield,
   Lightbulb,
-  Activity
+  Activity,
+  GitBranch
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 
@@ -24,7 +25,7 @@ const navigation = [
   { name: 'Upload', href: '/upload', icon: Upload },
   { name: 'Analysis', href: '/analysis', icon: Activity },
   { name: 'Visualizations', href: '/visualizations', icon: TrendingUp },
-  { name: 'Models', href: '/models', icon: Brain },
+  { name: 'Models', href: '/models', icon: GitBranch },
   { name: 'Explainability', href: '/explainability', icon: Shield },
   { name: 'AI Insights', href: '/insights', icon: Lightbulb },
   { name: 'Reports', href: '/reports', icon: FileText },
