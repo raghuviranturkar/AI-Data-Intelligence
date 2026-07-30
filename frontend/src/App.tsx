@@ -6,7 +6,7 @@ import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
 import UploadPage from './pages/Upload'
 import AnalysisPage from './pages/analysis/AnalysisPage'
-import TestPage from './pages/TestPage'
+import { VisualizationsPage } from './pages/visualizations'
 
 function App() {
   return (
@@ -18,7 +18,12 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/upload" element={<UploadPage />} />
               <Route path="/analysis" element={<AnalysisPage />} />
-              <Route path="/test" element={<TestPage />} />
+              <Route path="/visualizations" element={<VisualizationsPage />} />
+              <Route path="/models" element={<Dashboard />} />
+              <Route path="/explainability" element={<Dashboard />} />
+              <Route path="/insights" element={<Dashboard />} />
+              <Route path="/reports" element={<Dashboard />} />
+              <Route path="/settings" element={<Dashboard />} />
             </Routes>
           </Layout>
         </DataProvider>

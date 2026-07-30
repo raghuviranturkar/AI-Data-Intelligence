@@ -10,7 +10,8 @@ import {
   Database,
   TrendingUp,
   Shield,
-  Lightbulb
+  Lightbulb,
+  Activity
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 
@@ -21,7 +22,7 @@ interface SidebarProps {
 const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Upload', href: '/upload', icon: Upload },
-  { name: 'Analysis', href: '/analysis', icon: BarChart3 },
+  { name: 'Analysis', href: '/analysis', icon: Activity },
   { name: 'Visualizations', href: '/visualizations', icon: TrendingUp },
   { name: 'Models', href: '/models', icon: Brain },
   { name: 'Explainability', href: '/explainability', icon: Shield },
@@ -41,7 +42,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
       )}
     >
       <div className="flex h-full flex-col overflow-hidden">
-        {/* Logo */}
         <div className={cn(
           'flex h-16 items-center border-b border-gray-200 dark:border-gray-800 transition-all duration-300 flex-shrink-0',
           collapsed ? 'justify-center px-2' : 'gap-2 px-6'
@@ -52,7 +52,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           )}
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 overflow-y-auto py-4">
           <div className="space-y-1 px-2">
             {navigation.map((item) => {
@@ -78,7 +77,6 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
           </div>
         </nav>
 
-        {/* Footer */}
         <div className="border-t border-gray-200 dark:border-gray-800 p-4 flex-shrink-0">
           <div className={cn(
             'rounded-lg bg-primary-50 dark:bg-primary-900/20 p-3 transition-all duration-300',
