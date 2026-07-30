@@ -3,7 +3,7 @@ import { CheckCircle, Loader2, Clock, AlertCircle } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { cn } from '../../utils/cn'
 
-interface TimelineStep {
+export interface TimelineStep {
   id: string
   label: string
   status: 'completed' | 'running' | 'pending' | 'error'
@@ -47,34 +47,44 @@ const AnalysisTimelineSection: React.FC<AnalysisTimelineSectionProps> = ({
     }
   }
 
+  // Calculate completion stats
   const completedCount = steps.filter(s => s.status === 'completed').length
   const totalCount = steps.length
+  const allCompleted = completedCount === totalCount
 
   return (
     <div className={cn('space-y-4', className)}>
       <div className="flex items-center gap-2">
         <Clock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Analysis Timeline</h3>
-        <Badge variant="info" size="sm">{completedCount}/{totalCount} Complete</Badge>
+        <Badge variant={allCompleted ? 'success' : 'warning'} size="sm">
+          {completedCount}/{totalCount} Complete
+        </Badge>
+        {allCompleted && (
+          <Badge variant="success" size="sm">✓ All Done</Badge>
+        )}
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <div className="relative">
+          {/* Vertical line */}
           <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
 
           <div className="space-y-4">
             {steps.map((step) => (
               <div key={step.id} className="relative flex items-start gap-4">
+                {/* Status indicator */}
                 <div className={cn(
-                  'relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2',
+                  'relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors duration-300',
                   getStatusColor(step.status),
                   getStatusBg(step.status)
                 )}>
                   {getStatusIcon(step.status)}
                 </div>
 
+                {/* Content */}
                 <div className="flex-1 pt-1">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
                     <p className={cn(
                       'font-medium',
                       step.status === 'completed' ? 'text-gray-900 dark:text-white' :
