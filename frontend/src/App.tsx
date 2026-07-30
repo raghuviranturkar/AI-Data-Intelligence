@@ -5,6 +5,8 @@ import { DataProvider } from './context/DataContext'
 import Layout from './components/layout/Layout'
 import Dashboard from './pages/Dashboard'
 import UploadPage from './pages/Upload'
+import AnalysisPage from './pages/analysis/AnalysisPage'
+import TestPage from './pages/TestPage'
 
 function App() {
   return (
@@ -15,13 +17,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/upload" element={<UploadPage />} />
-              <Route path="/analysis" element={<Dashboard />} />
-              <Route path="/visualizations" element={<Dashboard />} />
-              <Route path="/models" element={<Dashboard />} />
-              <Route path="/explainability" element={<Dashboard />} />
-              <Route path="/insights" element={<Dashboard />} />
-              <Route path="/reports" element={<Dashboard />} />
-              <Route path="/settings" element={<Dashboard />} />
+              <Route path="/analysis" element={<AnalysisPage />} />
+              <Route path="/test" element={<TestPage />} />
             </Routes>
           </Layout>
         </DataProvider>
