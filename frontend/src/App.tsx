@@ -9,6 +9,7 @@ import AnalysisPage from './pages/analysis/AnalysisPage'
 import { VisualizationsPage } from './pages/visualizations'
 import { ModelsPage } from './pages/models'
 import { ExplainabilityPage } from './pages/explainability'
+import { ReportsPage } from './pages/reports'
 
 function App() {
   return (
@@ -23,8 +24,7 @@ function App() {
               <Route path="/visualizations" element={<VisualizationsPage />} />
               <Route path="/models" element={<ModelsPage />} />
               <Route path="/explainability" element={<ExplainabilityPage />} />
-              <Route path="/insights" element={<Dashboard />} />
-              <Route path="/reports" element={<Dashboard />} />
+              <Route path="/reports" element={<ReportsPage />} />
               <Route path="/settings" element={<Dashboard />} />
             </Routes>
           </Layout>
