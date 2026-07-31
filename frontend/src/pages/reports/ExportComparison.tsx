@@ -2,13 +2,13 @@ import React from 'react'
 import { Check, X } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 
-const comparisonData = [
+const comparisons = [
   { feature: 'Printable', pdf: true, html: true, markdown: false },
   { feature: 'Interactive', pdf: false, html: true, markdown: false },
   { feature: 'GitHub Friendly', pdf: false, html: false, markdown: true },
   { feature: 'Charts', pdf: true, html: true, markdown: false },
   { feature: 'Sharing', pdf: true, html: true, markdown: true },
-  { feature: 'Email Ready', pdf: true, html: false, markdown: false },
+  { feature: 'Dark Mode', pdf: false, html: true, markdown: false },
 ]
 
 const ExportComparison: React.FC = () => {
@@ -18,7 +18,6 @@ const ExportComparison: React.FC = () => {
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Export Formats Comparison</h3>
         <Badge variant="info" size="sm">3 Formats</Badge>
       </div>
-
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -30,17 +29,17 @@ const ExportComparison: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {comparisonData.map((row, index) => (
-              <tr key={index} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-                <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">{row.feature}</td>
+            {comparisons.map((item, index) => (
+              <tr key={index} className="border-b border-gray-100 dark:border-gray-700/50">
+                <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">{item.feature}</td>
                 <td className="px-3 py-2 text-center">
-                  {row.pdf ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />}
+                  {item.pdf ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-300 dark:text-gray-600 mx-auto" />}
                 </td>
                 <td className="px-3 py-2 text-center">
-                  {row.html ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />}
+                  {item.html ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-300 dark:text-gray-600 mx-auto" />}
                 </td>
                 <td className="px-3 py-2 text-center">
-                  {row.markdown ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-400 mx-auto" />}
+                  {item.markdown ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-300 dark:text-gray-600 mx-auto" />}
                 </td>
               </tr>
             ))}

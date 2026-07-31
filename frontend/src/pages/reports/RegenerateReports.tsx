@@ -1,52 +1,82 @@
-import React from 'react'
-import { RefreshCw, FileText, CheckCircle } from 'lucide-react'
+import React, { useState } from 'react'
+import { RefreshCw, Loader2, CheckCircle } from 'lucide-react'
 import { Button } from '../../components/common/Button'
+import ProgressBar from '../../components/common/ProgressBar'
 
 interface RegenerateReportsProps {
-  onRegenerate: () => void
-  generating: boolean
+  onRegenerate: () => Promise<void>
+  regenerating: boolean
 }
 
 const RegenerateReports: React.FC<RegenerateReportsProps> = ({
   onRegenerate,
-  generating,
+  regenerating,
 }) => {
+  const [progress, setProgress] = useState(0)
+  const [status, setStatus] = useState<'idle' | 'running' | 'complete'>('idle')
+
+  const handleRegenerate = async () => {
+    setStatus('running')
+    setProgress(0)
+
+    // Simulate progress
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval)
+          return 100
+        }
+        return prev + 10
+      })
+    }, 300)
+
+    try {
+      await onRegenerate()
+      setStatus('complete')
+    } catch (err) {
+      setStatus('idle')
+    } finally {
+      clearInterval(interval)
+    }
+  }
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-        <div>
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Regenerate Reports</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Generate fresh reports with the latest analysis results.
-          </p>
-        </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Regenerate Reports</h3>
+
+      {status === 'idle' && (
         <Button
           variant="primary"
           size="lg"
-          icon={generating ? <RefreshCw className="h-5 w-5 animate-spin" /> : <RefreshCw className="h-5 w-5" />}
-          onClick={onRegenerate}
-          disabled={generating}
-          className="min-w-[200px]"
+          icon={<RefreshCw className="h-5 w-5" />}
+          onClick={handleRegenerate}
+          disabled={regenerating}
+          className="w-full md:w-auto"
         >
-          {generating ? 'Generating...' : 'Generate New Reports'}
+          Generate New Reports
         </Button>
-      </div>
+      )}
 
-      {generating && (
-        <div className="mt-4 p-4 bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-primary-700 dark:text-primary-400">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              <span>Generating PDF...</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-primary-700 dark:text-primary-400">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              <span>Generating HTML...</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-primary-700 dark:text-primary-400">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              <span>Generating Markdown...</span>
-            </div>
+      {status === 'running' && (
+        <div className="space-y-3">
+          <ProgressBar value={progress} label="Generating reports..." />
+          <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Generating PDF...</span>
+            <span className="text-gray-300 dark:text-gray-600">•</span>
+            <span className="text-gray-300 dark:text-gray-600">Generating HTML...</span>
+            <span className="text-gray-300 dark:text-gray-600">•</span>
+            <span className="text-gray-300 dark:text-gray-600">Generating Markdown...</span>
+          </div>
+        </div>
+      )}
+
+      {status === 'complete' && (
+        <div className="flex items-center gap-3 p-4 bg-success-50 dark:bg-success-900/20 rounded-lg border border-success-200 dark:border-success-800">
+          <CheckCircle className="h-6 w-6 text-success-500" />
+          <div>
+            <p className="font-medium text-success-700 dark:text-success-400">Reports Generated Successfully!</p>
+            <p className="text-sm text-success-600 dark:text-success-300">All reports are ready for download.</p>
           </div>
         </div>
       )}

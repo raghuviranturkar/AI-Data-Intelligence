@@ -1,9 +1,9 @@
 import React from 'react'
-import { FileText, Award, CheckCircle, Clock, Database, Activity } from 'lucide-react'
+import { FileText, FileSpreadsheet, Award, Clock, Database, Activity } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 
 interface ReportsOverviewProps {
-  reportCount: number
+  reportsCount: number
   formats: string[]
   status: string
   generatedAt: string
@@ -12,7 +12,7 @@ interface ReportsOverviewProps {
 }
 
 const ReportsOverview: React.FC<ReportsOverviewProps> = ({
-  reportCount,
+  reportsCount,
   formats,
   status,
   generatedAt,
@@ -22,16 +22,22 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({
   const items = [
     {
       label: 'Reports Generated',
-      value: reportCount,
+      value: reportsCount,
       icon: <FileText className="h-5 w-5" />,
       color: 'text-primary-600 dark:text-primary-400',
       bg: 'bg-primary-50 dark:bg-primary-900/20',
-      subtitle: `${formats.join(', ')} formats`,
+    },
+    {
+      label: 'Available Formats',
+      value: formats.join(' • '),
+      icon: <FileSpreadsheet className="h-5 w-5" />,
+      color: 'text-blue-600 dark:text-blue-400',
+      bg: 'bg-blue-50 dark:bg-blue-900/20',
     },
     {
       label: 'Report Status',
       value: status,
-      icon: <CheckCircle className="h-5 w-5" />,
+      icon: <Award className="h-5 w-5" />,
       color: 'text-success-600 dark:text-success-400',
       bg: 'bg-success-50 dark:bg-success-900/20',
       badge: 'success',
@@ -40,8 +46,8 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({
       label: 'Generated At',
       value: generatedAt,
       icon: <Clock className="h-5 w-5" />,
-      color: 'text-blue-600 dark:text-blue-400',
-      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      color: 'text-gray-600 dark:text-gray-400',
+      bg: 'bg-gray-50 dark:bg-gray-800/50',
     },
     {
       label: 'Dataset',
@@ -60,7 +66,7 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {items.map((item, index) => (
         <div
           key={index}
@@ -72,9 +78,6 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({
           </div>
           <div className="mt-1">
             <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}</span>
-            {item.subtitle && (
-              <span className="block text-xs text-gray-500 dark:text-gray-400">{item.subtitle}</span>
-            )}
           </div>
         </div>
       ))}

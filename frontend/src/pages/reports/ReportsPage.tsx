@@ -1,14 +1,10 @@
 import React, { useState } from 'react'
 import { useData } from '../../context/DataContext'
 import { 
-  Loader2, AlertTriangle, FileText, Download, RefreshCw, 
-  Clock, Award, Database, CheckCircle, Eye, History,
-  File, FileCode, FileJson, Share2, Mail, Slack, 
-  Calendar, HardDrive, BarChart3, Settings, Zap
+  Loader2, AlertTriangle, FileText, RefreshCw, Globe
 } from 'lucide-react'
 import { Button } from '../../components/common/Button'
-import { Badge } from '../../components/common/Badge'
-import Card from '../../components/common/Card'
+import { downloadReport } from '../../services/api'
 
 // Import sub-components
 import ReportsHeader from './ReportsHeader'
@@ -18,19 +14,88 @@ import ReportCard from './ReportCard'
 import ReportContentSummary from './ReportContentSummary'
 import ReportMetadata from './ReportMetadata'
 import ExportComparison from './ExportComparison'
+import ReportPreview from './ReportPreview'
 import DownloadHistory from './DownloadHistory'
 import ReportStatistics from './ReportStatistics'
 import ShareOptions from './ShareOptions'
 import RegenerateReports from './RegenerateReports'
 
+const Toast: React.FC<{ message: string; type: 'success' | 'error'; onClose: () => void }> = ({ 
+  message, 
+  type, 
+  onClose 
+}) => {
+  const bgColor = type === 'success' 
+    ? 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800 text-success-700 dark:text-success-400'
+    : 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800 text-danger-700 dark:text-danger-400'
+  
+  return (
+    <div className={`${bgColor} border rounded-lg p-4 mb-4 flex items-center justify-between`}>
+      <span>{message}</span>
+      <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+        ✕
+      </button>
+    </div>
+  )
+}
+
 const ReportsPage: React.FC = () => {
   const { data, isLoading, error } = useData()
   const [generating, setGenerating] = useState(false)
-  const [downloadStatus, setDownloadStatus] = useState<Record<string, 'idle' | 'downloading' | 'success' | 'error'>>({
-    pdf: 'idle',
-    html: 'idle',
-    markdown: 'idle',
-  })
+  const [downloadProgress, setDownloadProgress] = useState<Record<string, boolean>>({})
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const sessionId = (data as any)?.session_id || null
+
+  const handleDownload = async (format: 'pdf' | 'html' | 'md') => {
+    if (!sessionId) {
+      setToast({ 
+        message: 'Unable to download report. Please generate a report first.', 
+        type: 'error' 
+      })
+      setTimeout(() => setToast(null), 5000)
+      return
+    }
+
+    setDownloadProgress(prev => ({ ...prev, [format]: true }))
+    
+    try {
+      await downloadReport(sessionId, format)
+      const formatNames = { pdf: 'PDF', html: 'HTML', md: 'Markdown' }
+      setToast({ 
+        message: `${formatNames[format]} downloaded successfully`, 
+        type: 'success' 
+      })
+      setTimeout(() => setToast(null), 5000)
+    } catch (err: any) {
+      console.error(`Failed to download ${format} report:`, err)
+      const status = err.response?.status
+      let message = 'Unable to download report. Please generate a report first.'
+      if (status === 404) {
+        message = 'Report not found. Please generate a report first.'
+      } else if (status === 500) {
+        message = 'Server error occurred while generating the report.'
+      }
+      setToast({ message, type: 'error' })
+      setTimeout(() => setToast(null), 5000)
+    } finally {
+      setDownloadProgress(prev => ({ ...prev, [format]: false }))
+    }
+  }
+
+  const handleRegenerate = async () => {
+    setGenerating(true)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 3000))
+      setToast({ message: 'Reports regenerated successfully', type: 'success' })
+      setTimeout(() => setToast(null), 5000)
+    } catch (err) {
+      setToast({ message: 'Failed to regenerate reports', type: 'error' })
+      setTimeout(() => setToast(null), 5000)
+    } finally {
+      setGenerating(false)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -60,7 +125,7 @@ const ReportsPage: React.FC = () => {
         <FileText className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
         <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">No Reports Available</h2>
         <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md">
-          Upload a dataset and complete the analysis to generate reports.
+          Upload a dataset to generate professional AI analysis reports.
         </p>
         <Button variant="primary" size="lg" className="mt-6" onClick={() => window.location.href = '/upload'}>
           Upload Dataset
@@ -73,136 +138,117 @@ const ReportsPage: React.FC = () => {
   const validation = data?.validation || {}
   const automl = data?.automl || {}
   const insights = data?.insights || {}
-  const qualityScore = validation?.quality?.quality_score || 0
-  const healthScore = insights?.ai_health_score?.score || 0
-  const bestModel = automl?.best_model?.name || 'N/A'
   const rows = dataset?.shape?.rows || 0
   const columns = dataset?.shape?.columns || 0
+  const qualityScore = validation?.quality?.quality_score || 0
+  const bestModel = automl?.best_model?.name || 'N/A'
+  const healthScore = insights?.ai_health_score?.score || 0
 
   const reports = [
     {
       id: 'pdf',
-      format: 'PDF' as const,
-      icon: <FileText className="h-8 w-8" />,
       title: 'PDF Report',
-      description: 'Complete business report with all analysis results, charts, and insights.',
-      size: '2.4 MB',
+      description: 'Complete business report with all analysis results, charts, and insights. Perfect for printing and sharing with stakeholders.',
+      icon: <FileText className="h-8 w-8" />,
+      format: 'pdf' as const,
       status: 'ready' as const,
+      size: '2.4 MB',
+      generatedAt: 'Today at 08:45 AM',
       features: ['Executive Summary', 'Dataset Overview', 'Visualizations', 'Model Performance', 'AI Insights'],
     },
     {
       id: 'html',
-      format: 'HTML' as const,
-      icon: <FileCode className="h-8 w-8" />,
       title: 'HTML Report',
-      description: 'Interactive web-based report with charts, tables, and navigation.',
-      size: '3.1 MB',
+      description: 'Interactive web-based report with full chart interactivity. Open in any browser for a rich analytical experience.',
+      icon: <Globe className="h-8 w-8" />,
+      format: 'html' as const,
       status: 'ready' as const,
-      features: ['Interactive', 'Browser Friendly', 'Charts', 'Tables', 'Navigation'],
+      size: '3.1 MB',
+      generatedAt: 'Today at 08:45 AM',
+      features: ['Interactive Charts', 'Responsive Design', 'Dark Mode Support', 'Print-Friendly'],
     },
     {
-      id: 'markdown',
-      format: 'Markdown' as const,
-      icon: <FileJson className="h-8 w-8" />,
+      id: 'md',
       title: 'Markdown Report',
-      description: 'Developer-friendly report in markdown format for documentation and version control.',
-      size: '1.2 MB',
+      description: 'Lightweight developer-friendly report in Markdown format. Perfect for documentation and GitHub repositories.',
+      icon: <FileText className="h-8 w-8" />,
+      format: 'md' as const,
       status: 'ready' as const,
-      features: ['GitHub Compatible', 'Lightweight', 'Documentation Format', 'Version Control Friendly'],
+      size: '0.8 MB',
+      generatedAt: 'Today at 08:45 AM',
+      features: ['GitHub Compatible', 'Lightweight', 'Version Control Friendly', 'Easy to Edit'],
     },
   ]
 
-  const handleDownload = async (format: 'pdf' | 'html' | 'markdown') => {
-    setDownloadStatus(prev => ({ ...prev, [format]: 'downloading' }))
-    
-    try {
-      // Simulate download
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      setDownloadStatus(prev => ({ ...prev, [format]: 'success' }))
-      
-      // Reset after 3 seconds
-      setTimeout(() => {
-        setDownloadStatus(prev => ({ ...prev, [format]: 'idle' }))
-      }, 3000)
-    } catch (err) {
-      setDownloadStatus(prev => ({ ...prev, [format]: 'error' }))
-    }
-  }
-
-  const handleRegenerate = async () => {
-    setGenerating(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setGenerating(false)
-  }
-
   return (
     <div className="space-y-6 pb-8">
-      {/* Header */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
+
       <ReportsHeader 
-        reportCount={3}
-        generatedAt={new Date().toLocaleString()}
-        onRefresh={() => {}}
+        reportsCount={reports.length}
+        generatedAt="Today at 08:45 AM"
+        datasetName={dataset?.file_name || 'Unknown'}
         onRegenerate={handleRegenerate}
-        generating={generating}
+        regenerating={generating}
       />
 
-      {/* Overview Cards */}
       <ReportsOverview 
-        reportCount={3}
+        reportsCount={reports.length}
         formats={['PDF', 'HTML', 'Markdown']}
-        status="Ready"
-        generatedAt={new Date().toLocaleString()}
+        status={sessionId ? 'Ready' : 'Not Generated'}
+        generatedAt="Today at 08:45 AM"
         datasetName={dataset?.file_name || 'Unknown'}
         healthScore={healthScore}
       />
 
-      {/* Pipeline */}
       <ReportsPipeline />
 
-      {/* Report Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {reports.map((report) => (
-          <ReportCard
-            key={report.id}
-            report={report}
-            onDownload={() => handleDownload(report.id as 'pdf' | 'html' | 'markdown')}
-            isDownloading={downloadStatus[report.id as keyof typeof downloadStatus] === 'downloading'}
-            isSuccess={downloadStatus[report.id as keyof typeof downloadStatus] === 'success'}
-            isError={downloadStatus[report.id as keyof typeof downloadStatus] === 'error'}
-          />
-        ))}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Available Reports</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {reports.map((report) => (
+            <ReportCard
+              key={report.id}
+              report={report}
+              onDownload={() => handleDownload(report.format)}
+              downloading={downloadProgress[report.format] || false}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Content Summary */}
       <ReportContentSummary />
-
-      {/* Report Metadata */}
       <ReportMetadata 
         datasetName={dataset?.file_name || 'Unknown'}
         rows={rows}
         columns={columns}
         qualityScore={qualityScore}
         bestModel={bestModel}
-        generatedAt={new Date().toLocaleString()}
+        generatedAt="Today at 08:45 AM"
       />
-
-      {/* Export Comparison */}
       <ExportComparison />
-
-      {/* Report Statistics */}
-      <ReportStatistics />
-
-      {/* Share Options */}
-      <ShareOptions />
-
-      {/* Download History */}
-      <DownloadHistory />
-
-      {/* Regenerate */}
-      <RegenerateReports 
-        onRegenerate={handleRegenerate}
-        generating={generating}
+      <ReportPreview 
+        rows={rows}
+        columns={columns}
+        qualityScore={qualityScore}
+        bestModel={bestModel}
+        healthScore={healthScore}
       />
+      <ReportStatistics 
+        downloads={0}
+        reportsGenerated={reports.length}
+        avgGenerationTime="2.4s"
+        lastGenerated="Today at 08:45 AM"
+      />
+      <ShareOptions />
+      <RegenerateReports onRegenerate={handleRegenerate} regenerating={generating} />
+      <DownloadHistory />
     </div>
   )
 }

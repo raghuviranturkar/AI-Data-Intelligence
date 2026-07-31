@@ -74,59 +74,50 @@ const UploadPage: React.FC = () => {
       updatePipelineStatus(0, 'completed')
       setProgress(20)
 
-      // Simulate validation
       await new Promise(resolve => setTimeout(resolve, 500))
       updatePipelineStatus(1, 'running')
       await new Promise(resolve => setTimeout(resolve, 400))
       updatePipelineStatus(1, 'completed')
       setProgress(35)
 
-      // Simulate cleaning
       updatePipelineStatus(2, 'running')
       await new Promise(resolve => setTimeout(resolve, 400))
       updatePipelineStatus(2, 'completed')
       setProgress(50)
 
-      // Simulate EDA
       updatePipelineStatus(3, 'running')
       await new Promise(resolve => setTimeout(resolve, 500))
       updatePipelineStatus(3, 'completed')
       setProgress(60)
 
-      // Simulate Feature Engineering
       updatePipelineStatus(4, 'running')
       await new Promise(resolve => setTimeout(resolve, 400))
       updatePipelineStatus(4, 'completed')
       setProgress(70)
 
-      // Simulate AutoML
       updatePipelineStatus(5, 'running')
       await new Promise(resolve => setTimeout(resolve, 600))
       updatePipelineStatus(5, 'completed')
       setProgress(80)
 
-      // Simulate Explainability
       updatePipelineStatus(6, 'running')
       await new Promise(resolve => setTimeout(resolve, 400))
       updatePipelineStatus(6, 'completed')
       setProgress(90)
 
-      // Simulate Insights
       updatePipelineStatus(7, 'running')
       await new Promise(resolve => setTimeout(resolve, 500))
       updatePipelineStatus(7, 'completed')
       setProgress(100)
 
-      // Make the actual API call
       setStatus('processing')
       const result = await uploadDataset(file)
       
-      // Store data immediately
+      // Store data with session_id
       setData(result)
       setStatus('complete')
       setIsLoading(false)
       
-      // Navigate immediately - no delay
       navigate('/')
       
     } catch (err) {

@@ -1,18 +1,23 @@
 import React from 'react'
-import { 
-  Upload, CheckCircle, BarChart3, Settings, Brain, Shield, Lightbulb, FileText 
-} from 'lucide-react'
+import { CheckCircle, Upload, Shield, BarChart3, Settings, Brain, Eye, Lightbulb, FileText } from 'lucide-react'
 import { cn } from '../../utils/cn'
 
-const steps = [
-  { id: 'upload', label: 'Upload', icon: Upload, status: 'completed' },
-  { id: 'validation', label: 'Validation', icon: CheckCircle, status: 'completed' },
-  { id: 'eda', label: 'EDA', icon: BarChart3, status: 'completed' },
-  { id: 'feature', label: 'Feature Eng.', icon: Settings, status: 'completed' },
-  { id: 'automl', label: 'AutoML', icon: Brain, status: 'completed' },
-  { id: 'explainability', label: 'Explainability', icon: Shield, status: 'completed' },
-  { id: 'insights', label: 'AI Insights', icon: Lightbulb, status: 'completed' },
-  { id: 'reports', label: 'Reports', icon: FileText, status: 'completed' },
+interface PipelineStep {
+  id: string
+  label: string
+  icon: React.ReactNode
+  status: 'completed' | 'running' | 'pending'
+}
+
+const steps: PipelineStep[] = [
+  { id: 'upload', label: 'Upload', icon: <Upload className="h-5 w-5" />, status: 'completed' },
+  { id: 'validation', label: 'Validation', icon: <Shield className="h-5 w-5" />, status: 'completed' },
+  { id: 'eda', label: 'EDA', icon: <BarChart3 className="h-5 w-5" />, status: 'completed' },
+  { id: 'feature', label: 'Feature Eng.', icon: <Settings className="h-5 w-5" />, status: 'completed' },
+  { id: 'automl', label: 'AutoML', icon: <Brain className="h-5 w-5" />, status: 'completed' },
+  { id: 'explainability', label: 'Explainability', icon: <Eye className="h-5 w-5" />, status: 'completed' },
+  { id: 'insights', label: 'AI Insights', icon: <Lightbulb className="h-5 w-5" />, status: 'completed' },
+  { id: 'reports', label: 'Reports', icon: <FileText className="h-5 w-5" />, status: 'completed' },
 ]
 
 const ReportsPipeline: React.FC = () => {
@@ -23,7 +28,6 @@ const ReportsPipeline: React.FC = () => {
         {steps.map((step, index) => {
           const isCompleted = step.status === 'completed'
           const isLast = index === steps.length - 1
-          const Icon = step.icon
 
           return (
             <div key={step.id} className="flex items-center flex-shrink-0">
@@ -36,11 +40,11 @@ const ReportsPipeline: React.FC = () => {
                       : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-400 dark:text-gray-500'
                   )}
                 >
-                  <Icon className="h-5 w-5" />
+                  {isCompleted ? <CheckCircle className="h-5 w-5" /> : step.icon}
                 </div>
                 <span
                   className={cn(
-                    'mt-2 text-xs font-medium text-center max-w-[60px]',
+                    'mt-2 text-xs font-medium text-center max-w-[50px]',
                     isCompleted
                       ? 'text-success-600 dark:text-success-400'
                       : 'text-gray-400 dark:text-gray-500'

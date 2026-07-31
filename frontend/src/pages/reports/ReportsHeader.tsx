@@ -1,22 +1,22 @@
 import React from 'react'
-import { FileText, RefreshCw, Clock, Download, History } from 'lucide-react'
+import { FileText, RefreshCw, History, Download } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
 
 interface ReportsHeaderProps {
-  reportCount: number
+  reportsCount: number
   generatedAt: string
-  onRefresh: () => void
+  datasetName: string
   onRegenerate: () => void
-  generating: boolean
+  regenerating: boolean
 }
 
 const ReportsHeader: React.FC<ReportsHeaderProps> = ({
-  reportCount,
+  reportsCount,
   generatedAt,
-  onRefresh,
+  datasetName,
   onRegenerate,
-  generating,
+  regenerating,
 }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6 sticky top-16 z-20">
@@ -31,13 +31,9 @@ const ReportsHeader: React.FC<ReportsHeaderProps> = ({
               Download and manage AI-generated analysis reports.
             </p>
             <div className="flex flex-wrap items-center gap-3 mt-1">
-              <Badge variant="success" size="sm">
-                {reportCount} Reports Available
-              </Badge>
-              <Badge variant="info" size="sm">
-                <Clock className="h-3 w-3 inline mr-1" />
-                Last generated: {generatedAt}
-              </Badge>
+              <Badge variant="info" size="sm">{reportsCount} Reports</Badge>
+              <Badge variant="info" size="sm">Dataset: {datasetName}</Badge>
+              <Badge variant="info" size="sm">Generated: {generatedAt}</Badge>
             </div>
           </div>
         </div>
@@ -46,13 +42,16 @@ const ReportsHeader: React.FC<ReportsHeaderProps> = ({
           <Button 
             variant="primary" 
             size="sm" 
-            icon={generating ? <RefreshCw className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+            icon={<Download className="h-4 w-4" />}
             onClick={onRegenerate}
-            disabled={generating}
+            disabled={regenerating}
           >
-            {generating ? 'Generating...' : 'Generate Reports'}
+            {regenerating ? 'Generating...' : 'Generate Reports'}
           </Button>
-          <Button variant="secondary" size="sm" icon={<History className="h-4 w-4" />}>
+          <Button variant="secondary" size="sm" icon={<RefreshCw className="h-4 w-4" />}>
+            Refresh
+          </Button>
+          <Button variant="secondary" size="sm" icon={<History className="h-4 w-4" />} disabled>
             History
           </Button>
         </div>

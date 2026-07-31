@@ -8,13 +8,12 @@ const DownloadHistory: React.FC = () => {
       <div className="flex items-center gap-2 mb-4">
         <History className="h-5 w-5 text-gray-400 dark:text-gray-500" />
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Download History</h3>
-        <Badge variant="info" size="sm">Empty</Badge>
+        <Badge variant="info" size="sm">0 Downloads</Badge>
       </div>
-
       <div className="text-center py-8">
-        <Download className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
-        <p className="text-gray-400 dark:text-gray-500">No previous downloads</p>
-        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Reports you download will appear here</p>
+        <History className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+        <p className="text-gray-500 dark:text-gray-400">No previous downloads</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">Download reports to track your history</p>
       </div>
     </div>
   )

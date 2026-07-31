@@ -11,7 +11,10 @@ import { ModelsPage } from './pages/models'
 import { ExplainabilityPage } from './pages/explainability'
 import { ReportsPage } from './pages/reports'
 
+console.log('🔍 App.tsx: Application starting')
+
 function App() {
+  console.log('🔍 App.tsx: Rendering App')
   return (
     <BrowserRouter>
       <ThemeProvider>
