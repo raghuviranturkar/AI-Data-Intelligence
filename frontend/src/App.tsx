@@ -8,6 +8,7 @@ import UploadPage from './pages/Upload'
 import AnalysisPage from './pages/analysis/AnalysisPage'
 import { VisualizationsPage } from './pages/visualizations'
 import { ModelsPage } from './pages/models'
+import { ExplainabilityPage } from './pages/explainability'
 
 function App() {
   return (
@@ -21,7 +22,7 @@ function App() {
               <Route path="/analysis" element={<AnalysisPage />} />
               <Route path="/visualizations" element={<VisualizationsPage />} />
               <Route path="/models" element={<ModelsPage />} />
-              <Route path="/explainability" element={<Dashboard />} />
+              <Route path="/explainability" element={<ExplainabilityPage />} />
               <Route path="/insights" element={<Dashboard />} />
               <Route path="/reports" element={<Dashboard />} />
               <Route path="/settings" element={<Dashboard />} />

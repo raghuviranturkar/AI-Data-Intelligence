@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { useData } from '../../context/DataContext'
-import { Loader2, AlertTriangle, Filter, Download, RefreshCw, Maximize2 } from 'lucide-react'
+import { Loader2, AlertTriangle, Filter, Download, RefreshCw, Maximize2, Clock, BarChart3 } from 'lucide-react'
 import { Button } from '../../components/common/Button'
 import { Badge } from '../../components/common/Badge'
+import SkeletonChart from '../../components/common/SkeletonChart'
 
-// Import all chart sections (we'll create these next)
+// Import all chart sections
 import OverviewCharts from './OverviewCharts'
 import CorrelationCharts from './CorrelationCharts'
 import DistributionCharts from './DistributionCharts'
@@ -24,9 +25,19 @@ const VisualizationsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-12 w-12 text-primary-600 animate-spin" />
-        <p className="mt-4 text-gray-500 dark:text-gray-400">Loading visualizations...</p>
+      <div className="space-y-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
+          <div className="flex gap-4">
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-24" />
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <SkeletonChart height={250} />
+          <SkeletonChart height={250} />
+          <SkeletonChart height={250} />
+        </div>
       </div>
     )
   }
@@ -62,6 +73,9 @@ const VisualizationsPage: React.FC = () => {
   const rows = dataset?.shape?.rows || 0
   const columns = dataset?.shape?.columns || 0
 
+  // Count charts - this is a rough estimate
+  const chartCount = 12
+
   const filters = [
     { id: 'all', label: 'All' },
     { id: 'overview', label: 'Overview' },
@@ -82,12 +96,20 @@ const VisualizationsPage: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Visual Analytics</h1>
-            <div className="flex items-center gap-4 mt-1">
+            <div className="flex flex-wrap items-center gap-3 mt-1">
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Dataset: <span className="font-medium">{dataset?.file_name || 'Unknown'}</span>
               </p>
               <Badge variant="info" size="sm">{rows.toLocaleString()} rows</Badge>
               <Badge variant="info" size="sm">{columns} columns</Badge>
+              <Badge variant="info" size="sm">
+                <BarChart3 className="h-3 w-3 inline mr-1" />
+                {chartCount} Charts
+              </Badge>
+              <Badge variant="info" size="sm">
+                <Clock className="h-3 w-3 inline mr-1" />
+                {new Date().toLocaleTimeString()}
+              </Badge>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -190,31 +212,3 @@ const VisualizationsPage: React.FC = () => {
 }
 
 export default VisualizationsPage
-// Add these imports at the top
-import { Clock, BarChart3 } from 'lucide-react'
-
-// Inside the header section, add:
-<Badge variant="info" size="sm"><BarChart3 className="h-3 w-3 inline mr-1" /> 12 Charts</Badge>
-<Badge variant="info" size="sm"><Clock className="h-3 w-3 inline mr-1" /> {new Date().toLocaleTimeString()}</Badge>
-// Add this import
-import SkeletonChart from '../../components/common/SkeletonChart'
-
-// In the isLoading block, replace with:
-if (isLoading) {
-  return (
-    <div className="space-y-6">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-        <div className="flex gap-4">
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-24" />
-          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-24" />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <SkeletonChart height={250} />
-        <SkeletonChart height={250} />
-        <SkeletonChart height={250} />
-      </div>
-    </div>
-  )
-}
