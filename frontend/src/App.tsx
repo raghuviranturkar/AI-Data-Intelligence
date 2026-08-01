@@ -10,11 +10,9 @@ import { VisualizationsPage } from './pages/visualizations'
 import { ModelsPage } from './pages/models'
 import { ExplainabilityPage } from './pages/explainability'
 import { ReportsPage } from './pages/reports'
-
-console.log('🔍 App.tsx: Application starting')
+import { SettingsPage } from './pages/settings'
 
 function App() {
-  console.log('🔍 App.tsx: Rendering App')
   return (
     <BrowserRouter>
       <ThemeProvider>
@@ -28,7 +26,7 @@ function App() {
               <Route path="/models" element={<ModelsPage />} />
               <Route path="/explainability" element={<ExplainabilityPage />} />
               <Route path="/reports" element={<ReportsPage />} />
-              <Route path="/settings" element={<Dashboard />} />
+              <Route path="/settings" element={<SettingsPage />} />
             </Routes>
           </Layout>
         </DataProvider>
