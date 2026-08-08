@@ -23,7 +23,9 @@ import {
   Server,
   HardDrive,
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Upload,
+  Rocket
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/common/Button'
@@ -232,12 +234,6 @@ const Dashboard: React.FC = () => {
     { id: 'insights', label: 'Insights', icon: <Lightbulb className="h-4 w-4" />, status: 'completed' },
     { id: 'reports', label: 'Reports', icon: <FileText className="h-4 w-4" />, status: 'completed' },
   ]
-
-  const statusColors = {
-    completed: 'text-success-500',
-    running: 'text-primary-500 animate-pulse',
-    waiting: 'text-gray-300 dark:text-gray-600',
-  }
 
   return (
     <div className="space-y-6 pb-8">
