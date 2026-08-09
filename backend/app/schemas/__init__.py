@@ -1,7 +1,19 @@
-from .dataset import DatasetSummary, UploadResponse, ErrorResponse
+from .dataset import (
+    DatasetSummary,
+    ValidationReport,
+    UploadResponse,
+    ErrorResponse,
+    DatasetCreate,
+    DatasetUpdate,
+    DatasetResponse
+)
 
 __all__ = [
-    'DatasetSummary',
-    'UploadResponse',
-    'ErrorResponse'
+    "DatasetSummary",
+    "ValidationReport",
+    "UploadResponse",
+    "ErrorResponse",
+    "DatasetCreate",
+    "DatasetUpdate",
+    "DatasetResponse"
 ]

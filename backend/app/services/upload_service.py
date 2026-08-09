@@ -1,5 +1,6 @@
 """
-Upload Service with Data Validation and Report Storage
+Upload Service
+Handles file upload and processing
 """
 import os
 import shutil
@@ -7,18 +8,17 @@ from typing import Dict, Any
 from datetime import datetime
 from fastapi import UploadFile
 import pandas as pd
-import numpy as np
 import traceback
 
 from .pipeline import run_pipeline
-from .data_validator import DataPreValidator
-from .report_storage import store_results
+from .reports import generate_pdf_report, generate_html_report, generate_markdown_report
 
 
 class UploadService:
     def __init__(self, upload_dir: str = "uploads"):
         self.upload_dir = upload_dir
         os.makedirs(upload_dir, exist_ok=True)
+        os.makedirs("reports", exist_ok=True)
     
     async def process_upload(self, file: UploadFile) -> Dict[str, Any]:
         # Validate file type
@@ -30,10 +30,11 @@ class UploadService:
                 f"Unsupported file type. Allowed: {', '.join(allowed_extensions)}"
             )
         
-        # Generate unique filename
+        # Generate unique filename and session ID
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         safe_filename = f"{timestamp}_{file.filename}"
         file_path = os.path.join(self.upload_dir, safe_filename)
+        session_id = timestamp
         
         # Save file
         try:
@@ -47,7 +48,6 @@ class UploadService:
         # Process through pipeline
         try:
             # Load dataset
-            print(f"📊 Loading file: {file.filename}")
             if file_extension == '.csv':
                 df = pd.read_csv(file_path)
             else:
@@ -55,43 +55,69 @@ class UploadService:
             
             print(f"📊 Loaded dataset: {len(df)} rows, {len(df.columns)} columns")
             
-            # Pre-validate the data
-            is_valid, errors = DataPreValidator.validate_file(df, file.filename)
-            
-            if not is_valid:
-                # Clean up file
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-                
-                error_message = "The dataset has the following issues:\n" + "\n".join([f"• {e}" for e in errors])
-                raise ValueError(error_message)
-            
             # Run pipeline
             results = run_pipeline(df, file.filename)
             
-            # Add file path to results
-            results["file_path"] = file_path
-            results["file_name"] = file.filename
-            
-            # Store results for report generation
-            session_id = store_results(results)
+            # Add session_id to results
             results["session_id"] = session_id
             
+            # Generate reports
+            print("📄 Generating reports...")
+            
+            # Create context for report generation
+            context = {
+                "dataframe": df,
+                "file_name": file.filename,
+                "dataset": results.get("dataset", {}),
+                "validation": results.get("validation", {}),
+                "eda": results.get("eda", {}),
+                "feature_engineering": results.get("feature_engineering", {}),
+                "automl": results.get("automl", {}),
+                "explainability": results.get("explainability", {}),
+                "insights": results.get("insights", {})
+            }
+            
+            # Generate PDF
+            try:
+                pdf_path = generate_pdf_report(context, f"reports/report_{session_id}.pdf")
+                results["report_pdf"] = pdf_path
+                print(f"   ✅ PDF Report: {pdf_path}")
+            except Exception as e:
+                print(f"   ❌ PDF Report failed: {str(e)}")
+                traceback.print_exc()
+            
+            # Generate HTML - save to file
+            try:
+                html_path = f"reports/report_{session_id}.html"
+                html_content = generate_html_report(context)
+                with open(html_path, 'w') as f:
+                    f.write(html_content)
+                results["report_html"] = html_path
+                print(f"   ✅ HTML Report: {html_path}")
+            except Exception as e:
+                print(f"   ❌ HTML Report failed: {str(e)}")
+                traceback.print_exc()
+            
+            # Generate Markdown - save to file
+            try:
+                md_path = f"reports/report_{session_id}.md"
+                md_content = generate_markdown_report(context)
+                with open(md_path, 'w') as f:
+                    f.write(md_content)
+                results["report_markdown"] = md_path
+                print(f"   ✅ Markdown Report: {md_path}")
+            except Exception as e:
+                print(f"   ❌ Markdown Report failed: {str(e)}")
+                traceback.print_exc()
+            
+            results["file_path"] = file_path
+            
             print("✅ Pipeline complete!")
-            print(f"📄 Report session ID: {session_id}")
             return results
             
-        except ValueError as e:
-            # Clean up file
-            if os.path.exists(file_path):
-                os.remove(file_path)
-            print(f"❌ Validation Error: {str(e)}")
-            raise ValueError(str(e))
-            
         except Exception as e:
-            # Clean up file if processing fails
             if os.path.exists(file_path):
                 os.remove(file_path)
-            print(f"❌ Error processing dataset: {str(e)}")
-            print(traceback.format_exc())
+            print(f"❌ Error: {str(e)}")
+            traceback.print_exc()
             raise Exception(f"Error processing dataset: {str(e)}")

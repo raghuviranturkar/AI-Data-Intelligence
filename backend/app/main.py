@@ -1,16 +1,14 @@
 """
 FastAPI Application Entry Point
 """
-from fastapi import FastAPI, UploadFile, File, HTTPException, Query
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse, HTMLResponse, PlainTextResponse
+from fastapi.responses import JSONResponse
 import logging
 import json
 
 from app.schemas.dataset import UploadResponse, ErrorResponse
 from app.services.upload_service import UploadService
-from app.services.report_storage import get_results
-from app.services.reports.pdf_generator import generate_pdf_report, generate_html_report, generate_markdown_report
 from app.utils.json_encoder import NumpyJSONEncoder
 
 # Configure logging
@@ -42,6 +40,7 @@ upload_service = UploadService()
 
 @app.get("/")
 async def root():
+    """Root endpoint"""
     return {
         "message": "AI Data Intelligence Engine",
         "version": "1.0.0",
@@ -51,7 +50,11 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "service": "AI Data Intelligence Engine"}
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "service": "AI Data Intelligence Engine"
+    }
 
 
 @app.post(
@@ -63,7 +66,12 @@ async def health_check():
     }
 )
 async def upload_dataset(file: UploadFile = File(...)):
-    """Upload and analyze a dataset"""
+    """
+    Upload and analyze a dataset
+    
+    Accepts CSV, XLSX, or XLS files.
+    Returns comprehensive dataset analysis.
+    """
     logger.info(f"Received file: {file.filename}")
     
     try:
@@ -72,8 +80,7 @@ async def upload_dataset(file: UploadFile = File(...)):
         response_data = {
             "status": "success",
             "message": f"File {file.filename} processed successfully",
-            "data": result,
-            "session_id": result.get("session_id")
+            "data": result
         }
         
         json_str = json.dumps(response_data, cls=NumpyJSONEncoder)
@@ -95,56 +102,15 @@ async def upload_dataset(file: UploadFile = File(...)):
         )
 
 
-@app.get("/reports/pdf")
-async def download_pdf_report(session_id: str = Query(..., description="Session ID from upload response")):
-    """Download PDF report"""
-    context = get_results(session_id)
-    
-    if not context:
-        raise HTTPException(status_code=404, detail=f"No results found for session ID: {session_id}")
-    
-    try:
-        pdf_path = generate_pdf_report(context, f"report_{session_id}.pdf")
-        return FileResponse(
-            pdf_path, 
-            media_type='application/pdf', 
-            filename=f"report_{session_id}.pdf"
-        )
-    except Exception as e:
-        logger.error(f"Error generating PDF: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating PDF: {str(e)}")
+# Import authentication router
+from app.auth import router as auth_router
+app.include_router(auth_router)
 
-
-@app.get("/reports/html")
-async def download_html_report(session_id: str = Query(..., description="Session ID from upload response")):
-    """Download HTML report"""
-    context = get_results(session_id)
-    
-    if not context:
-        raise HTTPException(status_code=404, detail=f"No results found for session ID: {session_id}")
-    
-    try:
-        html_content = generate_html_report(context)
-        return HTMLResponse(content=html_content)
-    except Exception as e:
-        logger.error(f"Error generating HTML: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating HTML: {str(e)}")
-
-
-@app.get("/reports/md")
-async def download_markdown_report(session_id: str = Query(..., description="Session ID from upload response")):
-    """Download Markdown report"""
-    context = get_results(session_id)
-    
-    if not context:
-        raise HTTPException(status_code=404, detail=f"No results found for session ID: {session_id}")
-    
-    try:
-        md_content = generate_markdown_report(context)
-        return PlainTextResponse(content=md_content, media_type="text/markdown")
-    except Exception as e:
-        logger.error(f"Error generating Markdown: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error generating Markdown: {str(e)}")
+# Import product routers
+from app.routers import workspace_router, dataset_router, report_router
+app.include_router(workspace_router)
+app.include_router(dataset_router)
+app.include_router(report_router)
 
 
 if __name__ == "__main__":
@@ -155,3 +121,58 @@ if __name__ == "__main__":
         port=8000,
         reload=True
     )
+
+# ============ REPORT DOWNLOAD ENDPOINTS ============
+
+@app.get("/reports/pdf")
+async def download_pdf_report(session_id: str):
+    """Download PDF report"""
+    import os
+    from fastapi.responses import FileResponse
+    
+    report_path = f"reports/report_{session_id}.pdf"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"PDF report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="application/pdf",
+        filename=f"report_{session_id}.pdf"
+    )
+
+@app.get("/reports/html")
+async def download_html_report(session_id: str):
+    """Download HTML report"""
+    import os
+    from fastapi.responses import FileResponse
+    
+    report_path = f"reports/report_{session_id}.html"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"HTML report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="text/html",
+        filename=f"report_{session_id}.html"
+    )
+
+@app.get("/reports/md")
+async def download_markdown_report(session_id: str):
+    """Download Markdown report"""
+    import os
+    from fastapi.responses import FileResponse
+    
+    report_path = f"reports/report_{session_id}.md"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"Markdown report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="text/markdown",
+        filename=f"report_{session_id}.md"
+    )
+
+# ============ END REPORT DOWNLOAD ENDPOINTS ============

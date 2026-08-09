@@ -12,9 +12,13 @@ import {
   Shield,
   Lightbulb,
   Activity,
-  GitBranch
+  GitBranch,
+  User,
+  LogOut,
+  FolderOpen
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
+import { useAuth } from '../../context/AuthContext'
 
 interface SidebarProps {
   collapsed: boolean
@@ -29,11 +33,13 @@ const navigation = [
   { name: 'Explainability', href: '/explainability', icon: Shield },
   { name: 'AI Insights', href: '/insights', icon: Lightbulb },
   { name: 'Reports', href: '/reports', icon: FileText },
+  { name: 'Workspaces', href: '/workspaces', icon: FolderOpen },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
   const location = useLocation()
+  const { user, logout } = useAuth()
 
   return (
     <aside 
@@ -79,19 +85,33 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed }) => {
         </nav>
 
         <div className="border-t border-gray-200 dark:border-gray-800 p-4 flex-shrink-0">
-          <div className={cn(
-            'rounded-lg bg-primary-50 dark:bg-primary-900/20 p-3 transition-all duration-300',
-            collapsed && 'flex justify-center'
-          )}>
-            {!collapsed ? (
-              <>
-                <p className="text-xs text-gray-600 dark:text-gray-400">Pipeline Status</p>
-                <p className="text-sm font-medium text-primary-700 dark:text-primary-400">✓ Ready</p>
-              </>
-            ) : (
-              <div className="h-2 w-2 rounded-full bg-success-500" />
+          <div className="flex items-center gap-3">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center text-primary-700 dark:text-primary-300">
+                <User className="h-4 w-4" />
+              </div>
+            </div>
+            {!collapsed && user && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user.name}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+              </div>
+            )}
+            {!collapsed && (
+              <button
+                onClick={logout}
+                className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              </button>
             )}
           </div>
+          {!collapsed && (
+            <Link to="/profile" className="mt-2 block text-xs text-primary-600 dark:text-primary-400 hover:underline">
+              Profile
+            </Link>
+          )}
         </div>
       </div>
     </aside>
