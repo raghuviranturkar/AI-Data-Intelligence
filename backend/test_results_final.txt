@@ -1,0 +1,114 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-9.1.1, pluggy-1.6.0 -- /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/raghuviranturkar/AI-Data-Intelligence/backend
+plugins: cov-7.1.0, anyio-4.14.2
+collecting ... collected 27 items
+
+tests/test_auth.py::test_register_success PASSED                         [  3%]
+tests/test_auth.py::test_register_duplicate_email PASSED                 [  7%]
+tests/test_auth.py::test_login_success PASSED                            [ 11%]
+tests/test_auth.py::test_login_invalid_credentials PASSED                [ 14%]
+tests/test_auth.py::test_get_current_user PASSED                         [ 18%]
+tests/test_auth.py::test_get_current_user_invalid_token PASSED           [ 22%]
+tests/test_auth.py::test_logout PASSED                                   [ 25%]
+tests/test_automl.py::test_automl PASSED                                 [ 29%]
+tests/test_cleaning_engine.py::test_cleaning_recommendations PASSED      [ 33%]
+tests/test_eda_engine.py::test_eda_engine PASSED                         [ 37%]
+tests/test_enhancements.py::test_enhancements PASSED                     [ 40%]
+tests/test_explainability.py::test_explainability PASSED                 [ 44%]
+tests/test_feature_engine.py::test_feature_engineering PASSED            [ 48%]
+tests/test_improvements.py::test_improvements PASSED                     [ 51%]
+tests/test_insights.py::test_insights PASSED                             [ 55%]
+tests/test_inspector.py::test_inspect_dataset PASSED                     [ 59%]
+tests/test_outlier_engine.py::test_outlier_engine PASSED                 [ 62%]
+tests/test_report.py::test_report_endpoints PASSED                       [ 66%]
+tests/test_report.py::test_report_headers PASSED                         [ 70%]
+tests/test_report.py::test_report_generation_flow PASSED                 [ 74%]
+tests/test_reports.py::test_report_endpoints PASSED                      [ 77%]
+tests/test_reports.py::test_report_headers PASSED                        [ 81%]
+tests/test_reports.py::test_report_generation_flow PASSED                [ 85%]
+tests/test_upload.py::test_upload_success PASSED                         [ 88%]
+tests/test_upload.py::test_upload_unauthorized PASSED                    [ 92%]
+tests/test_upload.py::test_upload_invalid_file PASSED                    [ 96%]
+tests/test_validator.py::test_validator PASSED                           [100%]
+
+=============================== warnings summary ===============================
+venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+app/schemas/dataset.py:67
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/schemas/dataset.py:67: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class DatasetResponse(BaseModel):
+
+app/database.py:12
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/database.py:12: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+app/schemas/workspace.py:16
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/schemas/workspace.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class WorkspaceResponse(WorkspaceBase):
+
+app/schemas/report.py:15
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/schemas/report.py:15: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class ReportResponse(ReportBase):
+
+tests/test_auth.py::test_login_success
+tests/test_auth.py::test_get_current_user
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_invalid_file
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/auth/security.py:33: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+
+tests/test_auth.py::test_login_success
+tests/test_auth.py::test_get_current_user
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_invalid_file
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/auth/security.py:38: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
+tests/test_automl.py: 6 warnings
+tests/test_explainability.py: 6 warnings
+tests/test_feature_engine.py: 6 warnings
+tests/test_insights.py: 6 warnings
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:599: ConvergenceWarning: lbfgs failed to converge after 1000 iteration(s) (status=1):
+  STOP: TOTAL NO. OF ITERATIONS REACHED LIMIT
+  
+  Increase the number of iterations to improve the convergence (max_iter=1000).
+  You might also want to scale the data as shown in:
+      https://scikit-learn.org/stable/modules/preprocessing.html
+  Please also refer to the documentation for alternative solver options:
+      https://scikit-learn.org/stable/modules/linear_model.html#logistic-regression
+    n_iter_i = _check_optimize_result(
+
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/pandas/core/nanops.py:1275: RuntimeWarning: invalid value encountered in subtract
+    adjusted = values - mean
+
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/pandas/core/nanops.py:1364: RuntimeWarning: invalid value encountered in subtract
+    adjusted = values - mean
+
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/pandas/core/nanops.py:1028: RuntimeWarning: invalid value encountered in subtract
+    sqr = _ensure_numeric((avg - values) ** 2)
+
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_success
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/sklearn/metrics/_ranking.py:469: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================= 27 passed, 53 warnings in 8.94s ========================

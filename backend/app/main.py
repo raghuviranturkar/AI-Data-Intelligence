@@ -3,14 +3,13 @@ FastAPI Application Entry Point
 """
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse
 import logging
 import json
-import os
 
 from app.schemas.dataset import UploadResponse, ErrorResponse
 from app.services.upload_service import UploadService
-from app.utils.json_encoder import NumpyJSONEncoder
+from app.utils.json_encoder import NumpyJSONEncoder, convert_to_serializable
 from app.auth.dependencies import get_current_user
 from app.auth.models import User
 
@@ -78,14 +77,16 @@ async def upload_dataset(
     try:
         result = await upload_service.process_upload(file, user_id=current_user.id)
         
+        # Convert all data to serializable format
+        serializable_data = convert_to_serializable(result)
+        
         response_data = {
             "status": "success",
             "message": f"File {file.filename} processed successfully",
-            "data": result
+            "data": serializable_data
         }
         
-        json_str = json.dumps(response_data, cls=NumpyJSONEncoder)
-        return JSONResponse(content=json.loads(json_str))
+        return JSONResponse(content=response_data)
         
     except ValueError as e:
         logger.error(f"Validation error: {str(e)}")
@@ -101,55 +102,6 @@ async def upload_dataset(
             status_code=500,
             detail=str(e)
         )
-
-
-# ============ REPORT DOWNLOAD ENDPOINTS ============
-
-@app.get("/reports/pdf")
-async def download_pdf_report(session_id: str):
-    """Download PDF report"""
-    report_path = f"reports/report_{session_id}.pdf"
-    
-    if not os.path.exists(report_path):
-        raise HTTPException(status_code=404, detail=f"PDF report not found for session: {session_id}")
-    
-    return FileResponse(
-        report_path,
-        media_type="application/pdf",
-        filename=f"report_{session_id}.pdf"
-    )
-
-
-@app.get("/reports/html")
-async def download_html_report(session_id: str):
-    """Download HTML report"""
-    report_path = f"reports/report_{session_id}.html"
-    
-    if not os.path.exists(report_path):
-        raise HTTPException(status_code=404, detail=f"HTML report not found for session: {session_id}")
-    
-    return FileResponse(
-        report_path,
-        media_type="text/html",
-        filename=f"report_{session_id}.html"
-    )
-
-
-@app.get("/reports/md")
-async def download_markdown_report(session_id: str):
-    """Download Markdown report"""
-    report_path = f"reports/report_{session_id}.md"
-    
-    if not os.path.exists(report_path):
-        raise HTTPException(status_code=404, detail=f"Markdown report not found for session: {session_id}")
-    
-    return FileResponse(
-        report_path,
-        media_type="text/markdown",
-        filename=f"report_{session_id}.md"
-    )
-
-# ============ END REPORT DOWNLOAD ENDPOINTS ============
 
 
 # Import authentication router
@@ -175,3 +127,58 @@ if __name__ == "__main__":
         port=8000,
         reload=True
     )
+
+# ============ REPORT DOWNLOAD ENDPOINTS ============
+
+@app.get("/reports/pdf")
+async def download_pdf_report(session_id: str):
+    """Download PDF report"""
+    import os
+    from fastapi.responses import FileResponse
+    
+    report_path = f"reports/report_{session_id}.pdf"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"PDF report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="application/pdf",
+        filename=f"report_{session_id}.pdf"
+    )
+
+@app.get("/reports/html")
+async def download_html_report(session_id: str):
+    """Download HTML report"""
+    import os
+    from fastapi.responses import FileResponse
+    
+    report_path = f"reports/report_{session_id}.html"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"HTML report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="text/html",
+        filename=f"report_{session_id}.html"
+    )
+
+@app.get("/reports/md")
+async def download_markdown_report(session_id: str):
+    """Download Markdown report"""
+    import os
+    from fastapi.responses import FileResponse
+    
+    report_path = f"reports/report_{session_id}.md"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"Markdown report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="text/markdown",
+        filename=f"report_{session_id}.md"
+    )
+
+# ============ END REPORT DOWNLOAD ENDPOINTS ============

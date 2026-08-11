@@ -1,0 +1,10 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-9.1.1, pluggy-1.6.0 -- /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/raghuviranturkar/AI-Data-Intelligence/frontend
+plugins: cov-7.1.0, anyio-4.14.2
+collecting ... ERROR: file or directory not found: tests/
+
+collected 0 items
+
+============================ no tests ran in 0.01s =============================

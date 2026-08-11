@@ -1,10 +1,14 @@
 """
-Tests for report generation and download functionality
+Report generation and download tests
 """
 import pytest
 import os
 from fastapi.testclient import TestClient
 from app.main import app
+
+@pytest.fixture(autouse=True)
+def setup_db():
+    pass
 
 def test_report_endpoints(client):
     """Test report download endpoints with invalid session"""

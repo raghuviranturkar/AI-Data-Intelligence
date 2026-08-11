@@ -1,9 +1,10 @@
 import React, { useState } from 'react'
 import { useData } from '../../context/DataContext'
-import { Loader2, AlertTriangle, Filter, Download, RefreshCw, Maximize2, Clock, BarChart3 } from 'lucide-react'
+import { 
+  AlertTriangle, Filter, Download, RefreshCw, Maximize2, Clock, BarChart3 
+} from 'lucide-react'
 import { Button } from '../../components/common/Button'
 import { Badge } from '../../components/common/Badge'
-import SkeletonChart from '../../components/common/SkeletonChart'
 
 // Import all chart sections
 import OverviewCharts from './OverviewCharts'
@@ -25,18 +26,10 @@ const VisualizationsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4" />
-          <div className="flex gap-4">
-            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-24" />
-            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-24" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <SkeletonChart height={250} />
-          <SkeletonChart height={250} />
-          <SkeletonChart height={250} />
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 mx-auto" />
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-96 mx-auto" />
         </div>
       </div>
     )
@@ -73,7 +66,6 @@ const VisualizationsPage: React.FC = () => {
   const rows = dataset?.shape?.rows || 0
   const columns = dataset?.shape?.columns || 0
 
-  // Count charts - this is a rough estimate
   const chartCount = 12
 
   const filters = [
@@ -119,7 +111,7 @@ const VisualizationsPage: React.FC = () => {
             <Button variant="secondary" size="sm" icon={<Download className="h-4 w-4" />}>
               Export
             </Button>
-            <Button variant="ghost" size="sm" icon={<Maximize2 className="h-4 w-4" />} />
+            <Button variant="ghost" size="sm" icon={<Maximize2 className="h-4 w-4" />} aria-label="Fullscreen" />
           </div>
         </div>
 
@@ -149,60 +141,39 @@ const VisualizationsPage: React.FC = () => {
 
       {/* All Sections */}
       <div className="space-y-8">
-        {/* Section 1 & 2: Overview Charts */}
         {(activeFilter === 'all' || activeFilter === 'overview') && (
           <OverviewCharts data={data} />
         )}
-
-        {/* Section 3: Correlation Charts */}
         {(activeFilter === 'all' || activeFilter === 'correlations') && (
           <CorrelationCharts data={data} />
         )}
-
-        {/* Section 4: Distribution Charts */}
         {(activeFilter === 'all' || activeFilter === 'distributions') && (
           <DistributionCharts data={data} />
         )}
-
-        {/* Section 5: Outlier Charts */}
         {(activeFilter === 'all' || activeFilter === 'outliers') && (
           <OutlierCharts data={data} />
         )}
-
-        {/* Section 6: Category Charts */}
         {(activeFilter === 'all' || activeFilter === 'categories') && (
           <CategoryCharts data={data} />
         )}
-
-        {/* Section 7: Target Charts */}
         {(activeFilter === 'all' || activeFilter === 'target') && (
           <TargetCharts data={data} />
         )}
-
-        {/* Section 8: Feature Importance */}
         {(activeFilter === 'all' || activeFilter === 'explainability') && (
           <FeatureImportanceCharts data={data} />
         )}
-
-        {/* Section 9 & 10: Model Comparison */}
         {(activeFilter === 'all' || activeFilter === 'models') && (
           <>
             <ModelComparisonCharts data={data} />
             <ModelPerformanceCharts data={data} />
           </>
         )}
-
-        {/* Section 11: Feature Engineering */}
         {(activeFilter === 'all' || activeFilter === 'overview') && (
           <FeatureEngineeringCharts data={data} />
         )}
-
-        {/* Section 12: Explainability */}
         {(activeFilter === 'all' || activeFilter === 'explainability') && (
           <ExplainabilityCharts data={data} />
         )}
-
-        {/* Section 13: AI Insights */}
         {(activeFilter === 'all' || activeFilter === 'insights') && (
           <InsightsCharts data={data} />
         )}

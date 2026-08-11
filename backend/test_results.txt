@@ -1,0 +1,211 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.5, pytest-9.1.1, pluggy-1.6.0 -- /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/raghuviranturkar/AI-Data-Intelligence/backend
+plugins: cov-7.1.0, anyio-4.14.2
+collecting ... collected 26 items
+
+tests/test_auth.py::test_register_success PASSED                         [  3%]
+tests/test_auth.py::test_register_duplicate_email PASSED                 [  7%]
+tests/test_auth.py::test_login_success PASSED                            [ 11%]
+tests/test_auth.py::test_login_invalid_credentials PASSED                [ 15%]
+tests/test_auth.py::test_get_current_user PASSED                         [ 19%]
+tests/test_auth.py::test_get_current_user_invalid_token PASSED           [ 23%]
+tests/test_auth.py::test_logout PASSED                                   [ 26%]
+tests/test_automl.py::test_automl PASSED                                 [ 30%]
+tests/test_cleaning_engine.py::test_cleaning_recommendations PASSED      [ 34%]
+tests/test_eda_engine.py::test_eda_engine PASSED                         [ 38%]
+tests/test_enhancements.py::test_enhancements PASSED                     [ 42%]
+tests/test_explainability.py::test_explainability PASSED                 [ 46%]
+tests/test_feature_engine.py::test_feature_engineering PASSED            [ 50%]
+tests/test_improvements.py::test_improvements PASSED                     [ 53%]
+tests/test_insights.py::test_insights PASSED                             [ 57%]
+tests/test_inspector.py::test_inspect_dataset PASSED                     [ 61%]
+tests/test_outlier_engine.py::test_outlier_engine FAILED                 [ 65%]
+tests/test_report.py::test_report_endpoints PASSED                       [ 69%]
+tests/test_report.py::test_report_headers FAILED                         [ 73%]
+tests/test_report.py::test_report_generation_flow PASSED                 [ 76%]
+tests/test_reports.py::test_report_endpoints PASSED                      [ 80%]
+tests/test_reports.py::test_report_headers PASSED                        [ 84%]
+tests/test_upload.py::test_upload_success FAILED                         [ 88%]
+tests/test_upload.py::test_upload_unauthorized PASSED                    [ 92%]
+tests/test_upload.py::test_upload_invalid_file PASSED                    [ 96%]
+tests/test_validator.py::test_validator PASSED                           [100%]
+
+=================================== FAILURES ===================================
+_____________________________ test_outlier_engine ______________________________
+tests/test_outlier_engine.py:52: in test_outlier_engine
+    print(f"   Outlier Percentage: {summary['outlier_percentage_overall']}%")
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'outlier_percentage_overall'
+----------------------------- Captured stdout call -----------------------------
+
+======================================================================
+📊 OUTLIER DETECTION REPORT
+======================================================================
+
+📈 Summary:
+   Columns Analyzed: 1
+   Columns with Outliers: 1
+   Total Outliers: 3
+_____________________________ test_report_headers ______________________________
+tests/test_report.py:42: in test_report_headers
+    assert response.headers.get("content-type") == "text/html"
+E   AssertionError: assert 'text/html; charset=utf-8' == 'text/html'
+E     
+E     - text/html
+E     + text/html; charset=utf-8
+----------------------------- Captured stderr call -----------------------------
+2026-08-11 17:23:14,540 - httpx - INFO - HTTP Request: GET http://testserver/reports/pdf?session_id=20260811_154918 "HTTP/1.1 200 OK"
+2026-08-11 17:23:14,541 - httpx - INFO - HTTP Request: GET http://testserver/reports/html?session_id=20260811_154918 "HTTP/1.1 200 OK"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/reports/pdf?session_id=20260811_154918 "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: GET http://testserver/reports/html?session_id=20260811_154918 "HTTP/1.1 200 OK"
+_____________________________ test_upload_success ______________________________
+tests/test_upload.py:48: in test_upload_success
+    assert response.status_code == 200
+E   assert 400 == 200
+E    +  where 400 = <Response [400 Bad Request]>.status_code
+----------------------------- Captured stdout call -----------------------------
+📊 Loaded dataset: 5 rows, 4 columns
+🔍 Running dataset inspection...
+✅ Running validation...
+🧹 Generating cleaning recommendations...
+📊 Detecting outliers...
+📈 Performing EDA...
+🔧 Engineering features...
+🤖 Running AutoML...
+🚀 Starting AutoML Engine...
+   Target from validation: name
+   Problem type: multi_class_classification
+   ✅ Trained Logistic Regression
+   ✅ Trained Random Forest
+   ✅ Trained Decision Tree
+   ✅ Trained Gradient Boosting
+   ✅ Trained KNN
+   ✅ Evaluated Logistic Regression
+   ✅ Evaluated Random Forest
+   ✅ Evaluated Decision Tree
+   ✅ Evaluated Gradient Boosting
+   ❌ Failed to evaluate KNN: Expected n_neighbors <= n_samples_fit, but n_neighbors = 5, n_samples_fit = 2, n_samples = 1
+✅ AutoML complete! Trained 5 models
+🔍 Running Explainability...
+🔍 Starting Explainability Engine...
+📋 Extracting model and data...
+📋 Target: name
+📋 Features: 3
+📊 Computing feature importance...
+📈 Computing SHAP values...
+🌍 Generating global explanation...
+🔍 Generating local explanation...
+💡 Generating insights...
+📊 Calculating confidence...
+📊 Generating visualization metadata...
+✅ Explainability complete!
+💡 Running AI Insights...
+💡 Starting AI Insight Engine...
+📊 Extracting data from pipeline...
+📊 Dataset shape from context: 0 rows, 0 columns
+📊 Generating quality insights...
+📊 Generating EDA insights...
+📊 Generating model insights...
+📊 Generating explainability insights...
+📊 Generating strengths and weaknesses...
+📊 Generating risks...
+📊 Generating recommendations...
+📊 Calculating AI health score...
+📊 Generating executive summary...
+📊 Generating full report...
+✅ AI Insight Engine complete!
+✅ Pipeline complete! Context frozen for downstream modules.
+📄 Generating reports...
+📊 Context stored for user 1
+📊 Context stored for user 1
+   ✅ PDF Report: reports/report_20260811_172315.pdf
+   ✅ HTML Report: reports/report_20260811_172315.html
+   ✅ Markdown Report: reports/report_20260811_172315.md
+✅ Pipeline complete!
+----------------------------- Captured stderr call -----------------------------
+2026-08-11 17:23:14,820 - httpx - INFO - HTTP Request: POST http://testserver/auth/register "HTTP/1.1 200 OK"
+2026-08-11 17:23:15,053 - httpx - INFO - HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+2026-08-11 17:23:15,055 - app.main - INFO - Received file: test_upload.csv from user 1
+2026-08-11 17:23:15,157 - app.main - ERROR - Validation error: Out of range float values are not JSON compliant: nan
+2026-08-11 17:23:15,157 - httpx - INFO - HTTP Request: POST http://testserver/upload "HTTP/1.1 400 Bad Request"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/auth/register "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/auth/login "HTTP/1.1 200 OK"
+INFO     app.main:main.py:76 Received file: test_upload.csv from user 1
+ERROR    app.main:main.py:91 Validation error: Out of range float values are not JSON compliant: nan
+INFO     httpx:_client.py:1025 HTTP Request: POST http://testserver/upload "HTTP/1.1 400 Bad Request"
+=============================== warnings summary ===============================
+venv/lib/python3.13/site-packages/fastapi/testclient.py:1
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+app/schemas/dataset.py:67
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/schemas/dataset.py:67: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class DatasetResponse(BaseModel):
+
+app/database.py:12
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/database.py:12: MovedIn20Warning: The ``declarative_base()`` function is now available as sqlalchemy.orm.declarative_base(). (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    Base = declarative_base()
+
+app/schemas/workspace.py:16
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/schemas/workspace.py:16: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class WorkspaceResponse(WorkspaceBase):
+
+app/schemas/report.py:15
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/schemas/report.py:15: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.13/migration/
+    class ReportResponse(ReportBase):
+
+tests/test_auth.py::test_login_success
+tests/test_auth.py::test_get_current_user
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_invalid_file
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/auth/security.py:33: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+
+tests/test_auth.py::test_login_success
+tests/test_auth.py::test_get_current_user
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_invalid_file
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/auth/security.py:38: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/pandas/core/nanops.py:1028: RuntimeWarning: invalid value encountered in subtract
+    sqr = _ensure_numeric((avg - values) ** 2)
+
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/pandas/core/nanops.py:1275: RuntimeWarning: invalid value encountered in subtract
+    adjusted = values - mean
+
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+tests/test_enhancements.py::test_enhancements
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/pandas/core/nanops.py:1364: RuntimeWarning: invalid value encountered in subtract
+    adjusted = values - mean
+
+tests/test_inspector.py::test_inspect_dataset
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/app/services/dataset_inspector.py:71: Pandas4Warning: For backward compatibility, 'str' dtypes are included by select_dtypes when 'object' dtype is specified. This behavior is deprecated and will be removed in a future version. Explicitly pass 'str' to `include` to select them, or to `exclude` to remove them and silence this warning.
+  See https://pandas.pydata.org/docs/user_guide/migration-3-strings.html#string-migration-select-dtypes for details on how to write code that works with pandas 2 and 3.
+    return self.df.select_dtypes(include=['object', 'category']).columns.tolist()
+
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_success
+tests/test_upload.py::test_upload_success
+  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/sklearn/metrics/_ranking.py:469: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_outlier_engine.py::test_outlier_engine - KeyError: 'outlier...
+FAILED tests/test_report.py::test_report_headers - AssertionError: assert 'te...
+FAILED tests/test_upload.py::test_upload_success - assert 400 == 200
+================== 3 failed, 23 passed, 28 warnings in 8.14s ===================

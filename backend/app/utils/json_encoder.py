@@ -1,50 +1,61 @@
 """
-Custom JSON Encoder to handle numpy and pandas types
+Custom JSON Encoder to handle numpy and pandas types including NaN
 """
 import json
 import numpy as np
 import pandas as pd
 from datetime import datetime, date
 from decimal import Decimal
+import math
+
+
+def convert_to_serializable(obj):
+    """Recursively convert object to JSON-serializable format"""
+    if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+        return int(obj)
+    elif isinstance(obj, (np.float64, np.float32, np.float16)):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, np.void):
+        return None
+    elif isinstance(obj, pd.Series):
+        return obj.tolist()
+    elif isinstance(obj, pd.DataFrame):
+        return obj.to_dict(orient='records')
+    elif isinstance(obj, pd.Timestamp):
+        return obj.isoformat()
+    elif isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    elif isinstance(obj, Decimal):
+        return float(obj)
+    elif isinstance(obj, set):
+        return list(obj)
+    elif isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    elif isinstance(obj, dict):
+        return {k: convert_to_serializable(v) for k, v in obj.items()}
+    elif isinstance(obj, (list, tuple)):
+        return [convert_to_serializable(v) for v in obj]
+    elif hasattr(obj, 'tolist'):
+        return obj.tolist()
+    else:
+        return obj
 
 
 class NumpyJSONEncoder(json.JSONEncoder):
-    """Custom JSON encoder that handles numpy and pandas types"""
+    """Custom JSON encoder that handles numpy, pandas types, and NaN"""
     
     def default(self, obj):
-        # Handle numpy types
-        if isinstance(obj, np.integer):
-            return int(obj)
-        elif isinstance(obj, np.floating):
-            return float(obj)
-        elif isinstance(obj, np.ndarray):
-            return obj.tolist()
-        elif isinstance(obj, np.bool_):
-            return bool(obj)
-        elif isinstance(obj, np.void):
-            return None
-        
-        # Handle pandas types
-        elif isinstance(obj, pd.Series):
-            return obj.tolist()
-        elif isinstance(obj, pd.DataFrame):
-            return obj.to_dict(orient='records')
-        elif isinstance(obj, pd.Timestamp):
-            return obj.isoformat()
-        
-        # Handle other types
-        elif isinstance(obj, datetime):
-            return obj.isoformat()
-        elif isinstance(obj, date):
-            return obj.isoformat()
-        elif isinstance(obj, Decimal):
-            return float(obj)
-        elif isinstance(obj, set):
-            return list(obj)
-        elif hasattr(obj, 'tolist'):
-            return obj.tolist()
-        
-        # For any other type, try to convert to dict
+        result = convert_to_serializable(obj)
+        if result != obj:
+            return result
         try:
             return super().default(obj)
         except TypeError:

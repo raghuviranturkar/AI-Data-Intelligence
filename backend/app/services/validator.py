@@ -351,3 +351,26 @@ class DataValidator:
 def validate_dataset(df: pd.DataFrame, file_name: str = "unknown") -> Dict[str, Any]:
     validator = DataValidator(df, file_name)
     return validator.get_validation_report()
+
+def _convert_to_native(self, obj: Any) -> Any:
+    """Convert numpy types to Python native types, handling NaN"""
+    if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
+        return int(obj)
+    elif isinstance(obj, (np.float64, np.float32, np.float16)):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return float(obj)
+    elif isinstance(obj, np.bool_):
+        return bool(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: self._convert_to_native(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [self._convert_to_native(v) for v in obj]
+    elif isinstance(obj, float):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return obj
+    else:
+        return obj

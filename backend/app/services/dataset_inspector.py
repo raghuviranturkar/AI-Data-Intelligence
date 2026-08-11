@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any, List
 import os
+import math
 
 
 class DatasetInspector:
@@ -31,12 +32,11 @@ class DatasetInspector:
             raise Exception(f"Error loading dataset: {str(e)}")
     
     def _convert_to_native(self, obj: Any) -> Any:
-        """Convert numpy types to Python native types"""
+        """Convert numpy types to Python native types, handling NaN"""
         if isinstance(obj, (np.int64, np.int32, np.int16, np.int8)):
             return int(obj)
         elif isinstance(obj, (np.float64, np.float32, np.float16)):
-            # Handle infinite values
-            if np.isinf(obj):
+            if math.isnan(obj) or math.isinf(obj):
                 return None
             return float(obj)
         elif isinstance(obj, np.bool_):
@@ -49,6 +49,10 @@ class DatasetInspector:
             return [self._convert_to_native(v) for v in obj]
         elif isinstance(obj, pd.Series):
             return obj.tolist()
+        elif isinstance(obj, float):
+            if math.isnan(obj) or math.isinf(obj):
+                return None
+            return obj
         else:
             return obj
     
@@ -68,7 +72,7 @@ class DatasetInspector:
         return self.df.select_dtypes(include=[np.number]).columns.tolist()
     
     def get_categorical_columns(self) -> List[str]:
-        return self.df.select_dtypes(include=['object', 'category']).columns.tolist()
+        return self.df.select_dtypes(include=['object', 'category', 'string']).columns.tolist()
     
     def missing_values(self) -> Dict[str, int]:
         return self._convert_to_native(self.df.isnull().sum().to_dict())
@@ -94,9 +98,6 @@ class DatasetInspector:
         if numeric_df.empty:
             return {"message": "No numeric columns found"}
         
-        # Replace inf with NaN for statistics
-        numeric_df = numeric_df.replace([np.inf, -np.inf], np.nan)
-        
         stats = {
             "count": numeric_df.count().to_dict(),
             "mean": numeric_df.mean().to_dict(),
@@ -108,6 +109,7 @@ class DatasetInspector:
             "max": numeric_df.max().to_dict()
         }
         
+        # Convert NaN to None for JSON serialization
         return self._convert_to_native(stats)
     
     def get_summary(self) -> Dict[str, Any]:

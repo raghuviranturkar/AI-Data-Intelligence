@@ -35,11 +35,24 @@ export interface ValidationResult {
     duplicate_columns: string[];
     constant_columns: string[];
     high_missing_columns: string[];
+    infinite_values?: {
+      has_infinite: boolean;
+      has_positive_inf: boolean;
+      has_negative_inf: boolean;
+      infinite_columns: string[];
+    };
     readiness: {
       status: string;
       confidence: number;
       reason: string;
     };
+  };
+  profiling?: {
+    id_columns: string[];
+    boolean_columns: string[];
+    date_columns: string[];
+    target_candidates: string[];
+    column_statistics?: Record<string, any>;
   };
 }
 
@@ -48,6 +61,7 @@ export interface BestModel {
   score: number;
   cv_score: number;
   reason: string;
+  training_time?: number;
 }
 
 export interface RankedModel {
@@ -63,6 +77,16 @@ export interface AutoMLResult {
   ranked_models: RankedModel[];
   problem_type?: string;
   target_column?: string;
+  dataset_split?: {
+    train_size: number;
+    validation_size: number;
+    test_size: number;
+    total_size: number;
+    train_ratio: number;
+    validation_ratio: number;
+    test_ratio: number;
+    random_seed: number;
+  };
 }
 
 export interface ExplainabilityResult {
@@ -74,6 +98,30 @@ export interface ExplainabilityResult {
     percentage: number;
   }>;
   shap_available?: boolean;
+  global_explanation?: {
+    summary: string[];
+    insights: string[];
+  };
+  local_explanation?: {
+    prediction: string;
+    reasons: string[];
+    summary: string;
+    feature_contributions?: Array<{
+      feature: string;
+      shap_value: number;
+      contribution: number;
+      direction: string;
+    }>;
+  };
+  insights?: {
+    explanations: string[];
+    insights: string[];
+  };
+  confidence?: {
+    level: string;
+    score: number;
+    reason: string;
+  };
 }
 
 export interface InsightResult {
@@ -87,6 +135,10 @@ export interface InsightResult {
   weaknesses: string[];
   risks: string[];
   next_steps?: string[];
+  quality_insights?: string[];
+  eda_insights?: string[];
+  model_insights?: string[];
+  explainability_insights?: string[];
 }
 
 export interface PipelineResult {
