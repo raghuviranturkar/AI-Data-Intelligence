@@ -31,7 +31,7 @@ const navigation = [
   { name: 'Visualizations', href: '/visualizations', icon: TrendingUp },
   { name: 'Models', href: '/models', icon: GitBranch },
   { name: 'Explainability', href: '/explainability', icon: Shield },
-  { name: 'AI Insights', href: '/insights', icon: Lightbulb },
+  { name: 'AI Insights', href: '/ai-insights', icon: Lightbulb },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Workspaces', href: '/workspaces', icon: FolderOpen },
   { name: 'Settings', href: '/settings', icon: Settings },
