@@ -3,9 +3,10 @@ FastAPI Application Entry Point
 """
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 import logging
 import json
+import os
 
 from app.schemas.dataset import UploadResponse, ErrorResponse
 from app.services.upload_service import UploadService
@@ -71,12 +72,7 @@ async def upload_dataset(
     file: UploadFile = File(...),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Upload and analyze a dataset
-    
-    Accepts CSV, XLSX, or XLS files.
-    Returns comprehensive dataset analysis.
-    """
+    """Upload and analyze a dataset"""
     logger.info(f"Received file: {file.filename} from user {current_user.id}")
     
     try:
@@ -105,6 +101,55 @@ async def upload_dataset(
             status_code=500,
             detail=str(e)
         )
+
+
+# ============ REPORT DOWNLOAD ENDPOINTS ============
+
+@app.get("/reports/pdf")
+async def download_pdf_report(session_id: str):
+    """Download PDF report"""
+    report_path = f"reports/report_{session_id}.pdf"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"PDF report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="application/pdf",
+        filename=f"report_{session_id}.pdf"
+    )
+
+
+@app.get("/reports/html")
+async def download_html_report(session_id: str):
+    """Download HTML report"""
+    report_path = f"reports/report_{session_id}.html"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"HTML report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="text/html",
+        filename=f"report_{session_id}.html"
+    )
+
+
+@app.get("/reports/md")
+async def download_markdown_report(session_id: str):
+    """Download Markdown report"""
+    report_path = f"reports/report_{session_id}.md"
+    
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail=f"Markdown report not found for session: {session_id}")
+    
+    return FileResponse(
+        report_path,
+        media_type="text/markdown",
+        filename=f"report_{session_id}.md"
+    )
+
+# ============ END REPORT DOWNLOAD ENDPOINTS ============
 
 
 # Import authentication router
