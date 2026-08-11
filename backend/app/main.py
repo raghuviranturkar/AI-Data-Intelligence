@@ -1,7 +1,7 @@
 """
 FastAPI Application Entry Point
 """
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
@@ -10,6 +10,8 @@ import json
 from app.schemas.dataset import UploadResponse, ErrorResponse
 from app.services.upload_service import UploadService
 from app.utils.json_encoder import NumpyJSONEncoder
+from app.auth.dependencies import get_current_user
+from app.auth.models import User
 
 # Configure logging
 logging.basicConfig(
@@ -65,17 +67,20 @@ async def health_check():
         500: {"model": ErrorResponse}
     }
 )
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
     """
     Upload and analyze a dataset
     
     Accepts CSV, XLSX, or XLS files.
     Returns comprehensive dataset analysis.
     """
-    logger.info(f"Received file: {file.filename}")
+    logger.info(f"Received file: {file.filename} from user {current_user.id}")
     
     try:
-        result = await upload_service.process_upload(file)
+        result = await upload_service.process_upload(file, user_id=current_user.id)
         
         response_data = {
             "status": "success",
@@ -112,6 +117,10 @@ app.include_router(workspace_router)
 app.include_router(dataset_router)
 app.include_router(report_router)
 
+# Import assistant router
+from app.routers.assistant import router as assistant_router
+app.include_router(assistant_router)
+
 
 if __name__ == "__main__":
     import uvicorn
@@ -121,58 +130,3 @@ if __name__ == "__main__":
         port=8000,
         reload=True
     )
-
-# ============ REPORT DOWNLOAD ENDPOINTS ============
-
-@app.get("/reports/pdf")
-async def download_pdf_report(session_id: str):
-    """Download PDF report"""
-    import os
-    from fastapi.responses import FileResponse
-    
-    report_path = f"reports/report_{session_id}.pdf"
-    
-    if not os.path.exists(report_path):
-        raise HTTPException(status_code=404, detail=f"PDF report not found for session: {session_id}")
-    
-    return FileResponse(
-        report_path,
-        media_type="application/pdf",
-        filename=f"report_{session_id}.pdf"
-    )
-
-@app.get("/reports/html")
-async def download_html_report(session_id: str):
-    """Download HTML report"""
-    import os
-    from fastapi.responses import FileResponse
-    
-    report_path = f"reports/report_{session_id}.html"
-    
-    if not os.path.exists(report_path):
-        raise HTTPException(status_code=404, detail=f"HTML report not found for session: {session_id}")
-    
-    return FileResponse(
-        report_path,
-        media_type="text/html",
-        filename=f"report_{session_id}.html"
-    )
-
-@app.get("/reports/md")
-async def download_markdown_report(session_id: str):
-    """Download Markdown report"""
-    import os
-    from fastapi.responses import FileResponse
-    
-    report_path = f"reports/report_{session_id}.md"
-    
-    if not os.path.exists(report_path):
-        raise HTTPException(status_code=404, detail=f"Markdown report not found for session: {session_id}")
-    
-    return FileResponse(
-        report_path,
-        media_type="text/markdown",
-        filename=f"report_{session_id}.md"
-    )
-
-# ============ END REPORT DOWNLOAD ENDPOINTS ============

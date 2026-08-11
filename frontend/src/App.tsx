@@ -14,6 +14,7 @@ import { ExplainabilityPage } from './pages/explainability'
 import { ReportsPage } from './pages/reports'
 import { SettingsPage } from './pages/settings'
 import { AIInsightsPage } from './pages/ai-insights'
+import { AssistantPage } from './pages/assistant'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Profile from './pages/Profile'
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
                 <Route path="/workspaces" element={<ProtectedRoute><Layout><WorkspacesPage /></Layout></ProtectedRoute>} />
                 <Route path="/ai-insights" element={<ProtectedRoute><Layout><AIInsightsPage /></Layout></ProtectedRoute>} />
+                <Route path="/assistant" element={<ProtectedRoute><Layout><AssistantPage /></Layout></ProtectedRoute>} />
                 <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
                 <Route path="/upload" element={<ProtectedRoute><Layout><UploadPage /></Layout></ProtectedRoute>} />
                 <Route path="/analysis" element={<ProtectedRoute><Layout><AnalysisPage /></Layout></ProtectedRoute>} />

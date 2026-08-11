@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+  
+  body {
+    @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* Simple component styles without complex @apply */
+.card {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .card {
+    background-color: rgb(31 41 55);
+  }
+}
+
+.metric-card {
+  background-color: white;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  transition-property: all;
+  transition-duration: 200ms;
+}
+
+.metric-card:hover {
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  transform: translateY(-4px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .metric-card {
+    background-color: rgb(31 41 55);
+  }
+}
+
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgb(55 65 81);
+  transition-property: background-color, color;
+  transition-duration: 200ms;
+}
+
+.sidebar-link:hover {
+  background-color: rgb(243 244 246);
+  color: rgb(17 24 39);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar-link {
+    color: rgb(209 213 219);
+  }
+  .sidebar-link:hover {
+    background-color: rgb(31 41 55);
+    color: rgb(255 255 255);
+  }
+}
+
+.sidebar-link.active {
+  background-color: rgb(238 242 255);
+  color: rgb(79 70 229);
+}
+
+@media (prefers-color-scheme: dark) {
+  .sidebar-link.active {
+    background-color: rgba(79, 70, 229, 0.2);
+    color: rgb(129 140 248);
+  }
+}
+
+.input {
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid rgb(209 213 219);
+  background-color: white;
+  padding: 0.5rem 1rem;
+  color: rgb(17 24 39);
+}
+
+.input:focus {
+  border-color: rgb(99 102 241);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .input {
+    border-color: rgb(75 85 99);
+    background-color: rgb(31 41 55);
+    color: rgb(243 244 246);
+  }
+  .input:focus {
+    border-color: rgb(129 140 248);
+    box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.2);
+  }
+}

@@ -4,7 +4,7 @@ Handles file upload and processing
 """
 import os
 import shutil
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 from fastapi import UploadFile
 import pandas as pd
@@ -20,7 +20,7 @@ class UploadService:
         os.makedirs(upload_dir, exist_ok=True)
         os.makedirs("reports", exist_ok=True)
     
-    async def process_upload(self, file: UploadFile) -> Dict[str, Any]:
+    async def process_upload(self, file: UploadFile, user_id: Optional[int] = None) -> Dict[str, Any]:
         # Validate file type
         allowed_extensions = {'.csv', '.xlsx', '.xls'}
         file_extension = os.path.splitext(file.filename)[1].lower()
@@ -64,7 +64,7 @@ class UploadService:
             # Generate reports
             print("📄 Generating reports...")
             
-            # Create context for report generation
+            # Create context for report generation and assistant
             context = {
                 "dataframe": df,
                 "file_name": file.filename,
@@ -76,6 +76,12 @@ class UploadService:
                 "explainability": results.get("explainability", {}),
                 "insights": results.get("insights", {})
             }
+            
+            # Store context for the assistant with user_id
+            if user_id is not None:
+                from app.routers.assistant import set_dataset_context
+                set_dataset_context(user_id, context)
+                print(f"📊 Context stored for user {user_id}")
             
             # Generate PDF
             try:

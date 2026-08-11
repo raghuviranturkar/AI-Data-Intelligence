@@ -15,7 +15,8 @@ import {
   GitBranch,
   User,
   LogOut,
-  FolderOpen
+  FolderOpen,
+  Bot
 } from 'lucide-react'
 import { cn } from '../../utils/cn'
 import { useAuth } from '../../context/AuthContext'
@@ -32,6 +33,7 @@ const navigation = [
   { name: 'Models', href: '/models', icon: GitBranch },
   { name: 'Explainability', href: '/explainability', icon: Shield },
   { name: 'AI Insights', href: '/ai-insights', icon: Lightbulb },
+  { name: 'AI Assistant', href: '/assistant', icon: Bot },
   { name: 'Reports', href: '/reports', icon: FileText },
   { name: 'Workspaces', href: '/workspaces', icon: FolderOpen },
   { name: 'Settings', href: '/settings', icon: Settings },

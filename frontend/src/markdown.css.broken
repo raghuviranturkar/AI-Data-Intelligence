@@ -1,0 +1,63 @@
+/* Markdown styles for assistant messages */
+.prose {
+  max-width: 100%;
+  color: inherit;
+}
+
+.prose ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.prose ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin: 0.5rem 0;
+}
+
+.prose li {
+  margin: 0.25rem 0;
+}
+
+.prose strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+.prose p {
+  margin: 0.5rem 0;
+}
+
+.prose p:first-child {
+  margin-top: 0;
+}
+
+.prose p:last-child {
+  margin-bottom: 0;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  font-weight: 600;
+  margin: 0.75rem 0 0.5rem 0;
+}
+
+.prose h1:first-child, .prose h2:first-child, .prose h3:first-child, .prose h4:first-child {
+  margin-top: 0;
+}
+
+.dark .prose {
+  color: #e5e7eb;
+}
+
+.dark .prose strong {
+  color: #f3f4f6;
+}
+
+.dark .prose ul {
+  color: #d1d5db;
+}
+
+.dark .prose li::marker {
+  color: #9ca3af;
+}
