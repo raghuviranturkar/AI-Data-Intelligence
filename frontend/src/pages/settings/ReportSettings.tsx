@@ -1,6 +1,7 @@
-import React from 'react'
-import { FileText, File, FileCode, CheckSquare, Square } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { FileText, File, FileCode, CheckSquare, Square, Activity } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
+import { cn } from '../../utils/cn'
 
 interface ReportSettingsProps {
   settings: any
@@ -11,6 +12,32 @@ const ReportSettings: React.FC<ReportSettingsProps> = ({
   settings,
   onSettingChange,
 }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+    }
+  }
+
   const reportFormats = [
     { key: 'generatePDF', label: 'PDF', icon: <FileText className="h-4 w-4" /> },
     { key: 'generateHTML', label: 'HTML', icon: <File className="h-4 w-4" /> },
@@ -26,32 +53,51 @@ const ReportSettings: React.FC<ReportSettingsProps> = ({
   ]
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <FileText className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Report Settings</h3>
+    <div 
+      className="rounded-lg border p-5 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <Activity className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Report Settings</h3>
         <Badge variant="info" size="sm">Export</Badge>
       </div>
 
       <div className="space-y-4">
         {/* Report Formats */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: colors.textMuted }}>
             Generate Formats
           </label>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-2">
             {reportFormats.map(({ key, label, icon }) => (
               <button
                 key={key}
                 onClick={() => onSettingChange(key, !settings[key])}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                className={`flex items-center gap-2 px-3 py-2 rounded-md border transition-all text-xs font-mono ${
                   settings[key]
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400'
-                    : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                    ? 'border-[#F0A94E] bg-[#F0A94E]/10 text-[#F0A94E]'
+                    : 'hover:border-[#3A4453]'
                 }`}
+                style={{
+                  backgroundColor: settings[key] ? 'rgba(240,169,78,0.05)' : colors.panelAlt,
+                  borderColor: settings[key] ? colors.accent.amber : colors.border,
+                  color: settings[key] ? colors.accent.amber : colors.textMuted,
+                }}
               >
                 {icon}
-                <span className="text-sm">{label}</span>
+                <span>{label}</span>
               </button>
             ))}
           </div>
@@ -59,21 +105,26 @@ const ReportSettings: React.FC<ReportSettingsProps> = ({
 
         {/* Default Report Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-xs font-mono uppercase tracking-wider mb-1.5" style={{ color: colors.textMuted }}>
             Default Report Name
           </label>
           <input
             type="text"
             value={settings.reportName}
             onChange={(e) => onSettingChange('reportName', e.target.value)}
-            className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"
+            className="w-full rounded-md border px-3 py-2 text-sm font-mono transition-colors focus:outline-none focus:ring-2"
+            style={{
+              backgroundColor: colors.panelAlt,
+              borderColor: colors.border,
+              color: colors.text,
+            }}
             placeholder="analysis_report"
           />
         </div>
 
         {/* Inclusions */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: colors.textMuted }}>
             Include in Report
           </label>
           <div className="grid grid-cols-2 gap-2">
@@ -81,18 +132,23 @@ const ReportSettings: React.FC<ReportSettingsProps> = ({
               <button
                 key={key}
                 onClick={() => onSettingChange(key, !settings[key])}
-                className={`flex items-center gap-2 p-2 rounded-lg border transition-all ${
+                className={`flex items-center gap-2 p-2 rounded-md border transition-all text-xs font-mono ${
                   settings[key]
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400'
-                    : 'border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300'
+                    ? 'border-[#F0A94E] bg-[#F0A94E]/10 text-[#F0A94E]'
+                    : 'hover:border-[#3A4453]'
                 }`}
+                style={{
+                  backgroundColor: settings[key] ? 'rgba(240,169,78,0.05)' : colors.panelAlt,
+                  borderColor: settings[key] ? colors.accent.amber : colors.border,
+                  color: settings[key] ? colors.accent.amber : colors.textMuted,
+                }}
               >
                 {settings[key] ? (
                   <CheckSquare className="h-4 w-4" />
                 ) : (
                   <Square className="h-4 w-4" />
                 )}
-                <span className="text-sm">{label}</span>
+                <span>{label}</span>
               </button>
             ))}
           </div>

@@ -1,12 +1,40 @@
-import React from 'react'
-import { Shield, AlertCircle, BarChart3, TrendingUp, TrendingDown, GitBranch } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Shield, AlertCircle, BarChart3, TrendingUp, TrendingDown, GitBranch, Sparkles } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
+import { cn } from '../../utils/cn'
 
 interface SHAPVisualizationsProps {
   shapAvailable: boolean
 }
 
 const SHAPVisualizations: React.FC<SHAPVisualizationsProps> = ({ shapAvailable }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      purple: '#B48CF2',
+    }
+  }
+
   const visualizations = [
     { name: 'Summary Plot', icon: BarChart3, available: shapAvailable },
     { name: 'Waterfall Plot', icon: TrendingUp, available: shapAvailable },
@@ -15,11 +43,25 @@ const SHAPVisualizations: React.FC<SHAPVisualizationsProps> = ({ shapAvailable }
   ]
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
+    <div 
+      className="rounded-lg border p-5 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Shield className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">SHAP Visualizations</h3>
+        <div className="flex items-center gap-3">
+          <div 
+            className="p-1.5 rounded-md border"
+            style={{ 
+              backgroundColor: colors.panelAlt,
+              borderColor: colors.border
+            }}
+          >
+            <Sparkles className="h-4 w-4" style={{ color: colors.accent.amber }} />
+          </div>
+          <h3 className="text-sm font-semibold" style={{ color: colors.text }}>SHAP Visualizations</h3>
           <Badge variant={shapAvailable ? 'success' : 'warning'} size="sm">
             {shapAvailable ? 'Available' : 'Unavailable'}
           </Badge>
@@ -27,26 +69,36 @@ const SHAPVisualizations: React.FC<SHAPVisualizationsProps> = ({ shapAvailable }
       </div>
 
       {shapAvailable ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {visualizations.map((viz) => (
             <div
               key={viz.name}
-              className="p-4 bg-gray-50 dark:bg-gray-700/30 rounded-lg text-center cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600/30 transition-colors"
+              className="p-3 rounded-md border text-center cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+              style={{ 
+                backgroundColor: colors.panelAlt,
+                borderColor: colors.border
+              }}
             >
-              <viz.icon className="h-8 w-8 text-primary-500 mx-auto mb-2" />
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{viz.name}</p>
+              <viz.icon className="h-6 w-6 mx-auto mb-1.5" style={{ color: colors.accent.azure }} />
+              <p className="text-xs font-medium" style={{ color: colors.text }}>{viz.name}</p>
               <Badge variant="success" size="sm">Ready</Badge>
             </div>
           ))}
         </div>
       ) : (
-        <div className="p-6 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800 text-center">
-          <AlertCircle className="h-8 w-8 text-yellow-500 mx-auto mb-3" />
-          <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">SHAP Package Not Installed</p>
-          <p className="text-sm text-yellow-600 dark:text-yellow-300 mt-1">
+        <div 
+          className="p-5 rounded-md border text-center"
+          style={{ 
+            backgroundColor: isDark ? 'rgba(240,169,78,0.05)' : '#FFFBEB',
+            borderColor: isDark ? 'rgba(240,169,78,0.2)' : '#FDE68A'
+          }}
+        >
+          <AlertCircle className="h-8 w-8 mx-auto mb-2" style={{ color: colors.accent.amber }} />
+          <p className="text-sm font-medium" style={{ color: colors.accent.amber }}>SHAP Package Not Installed</p>
+          <p className="text-xs font-mono mt-1" style={{ color: colors.textMuted }}>
             Install SHAP to enable advanced visualizations. Currently using model feature importance.
           </p>
-          <p className="text-xs text-yellow-500 dark:text-yellow-400 mt-2">
+          <p className="text-[10px] font-mono mt-2" style={{ color: colors.textDim }}>
             Run: pip install shap
           </p>
         </div>

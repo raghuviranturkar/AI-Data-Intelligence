@@ -1,6 +1,8 @@
-import React from 'react'
-import { Globe, LayoutDashboard, Moon, Sun, Monitor } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Globe, LayoutDashboard, Moon, Sun, Monitor, Settings } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
+import { cn } from '../../utils/cn'
+import { useTheme } from '../../context/ThemeContext'
 
 interface GeneralPreferencesProps {
   settings: any
@@ -11,6 +13,33 @@ const GeneralPreferences: React.FC<GeneralPreferencesProps> = ({
   settings,
   onSettingChange,
 }) => {
+  const { theme, toggleTheme } = useTheme()
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+    }
+  }
+
   const themes = [
     { value: 'light', label: 'Light', icon: <Sun className="h-4 w-4" /> },
     { value: 'dark', label: 'Dark', icon: <Moon className="h-4 w-4" /> },
@@ -24,33 +53,57 @@ const GeneralPreferences: React.FC<GeneralPreferencesProps> = ({
     { value: 'models', label: 'Models' },
   ]
 
+  const handleThemeChange = (value: string) => {
+    onSettingChange('theme', value)
+    toggleTheme()
+  }
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Globe className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">General Preferences</h3>
+    <div 
+      className="rounded-lg border p-5 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <Globe className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>General Preferences</h3>
         <Badge variant="info" size="sm">Basic</Badge>
       </div>
 
       <div className="space-y-4">
         {/* Theme Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: colors.textMuted }}>
             Default Theme
           </label>
           <div className="flex gap-2">
-            {themes.map((theme) => (
+            {themes.map((themeOption) => (
               <button
-                key={theme.value}
-                onClick={() => onSettingChange('theme', theme.value)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
-                  settings.theme === theme.value
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                key={themeOption.value}
+                onClick={() => handleThemeChange(themeOption.value)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md border transition-all text-sm font-mono ${
+                  settings.theme === themeOption.value
+                    ? 'border-[#F0A94E] bg-[#F0A94E]/10 text-[#F0A94E]'
+                    : 'border-[#232B35] hover:border-[#3A4453]'
                 }`}
+                style={{
+                  backgroundColor: settings.theme === themeOption.value ? 'rgba(240,169,78,0.05)' : colors.panelAlt,
+                  borderColor: settings.theme === themeOption.value ? colors.accent.amber : colors.border,
+                  color: settings.theme === themeOption.value ? colors.accent.amber : colors.textMuted,
+                }}
               >
-                {theme.icon}
-                <span className="text-sm">{theme.label}</span>
+                {themeOption.icon}
+                <span>{themeOption.label}</span>
               </button>
             ))}
           </div>
@@ -58,7 +111,7 @@ const GeneralPreferences: React.FC<GeneralPreferencesProps> = ({
 
         {/* Default Landing Page */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: colors.textMuted }}>
             Default Landing Page
           </label>
           <div className="flex flex-wrap gap-2">
@@ -66,26 +119,36 @@ const GeneralPreferences: React.FC<GeneralPreferencesProps> = ({
               <button
                 key={page.value}
                 onClick={() => onSettingChange('defaultPage', page.value)}
-                className={`px-4 py-2 rounded-lg border transition-all ${
+                className={`px-3 py-1.5 rounded-md border transition-all text-xs font-mono ${
                   settings.defaultPage === page.value
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 text-gray-700 dark:text-gray-300'
+                    ? 'border-[#F0A94E] bg-[#F0A94E]/10 text-[#F0A94E]'
+                    : 'hover:border-[#3A4453]'
                 }`}
+                style={{
+                  backgroundColor: settings.defaultPage === page.value ? 'rgba(240,169,78,0.05)' : colors.panelAlt,
+                  borderColor: settings.defaultPage === page.value ? colors.accent.amber : colors.border,
+                  color: settings.defaultPage === page.value ? colors.accent.amber : colors.textMuted,
+                }}
               >
-                <span className="text-sm">{page.label}</span>
+                {page.label}
               </button>
             ))}
           </div>
         </div>
 
         {/* Placeholder options */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-mono uppercase tracking-wider mb-1.5" style={{ color: colors.textMuted }}>
               Language
             </label>
             <select 
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"
+              className="w-full rounded-md border px-3 py-2 text-sm font-mono transition-colors focus:outline-none focus:ring-2 opacity-60 cursor-not-allowed"
+              style={{
+                backgroundColor: colors.panelAlt,
+                borderColor: colors.border,
+                color: colors.text,
+              }}
               disabled
             >
               <option>English (US)</option>
@@ -93,14 +156,19 @@ const GeneralPreferences: React.FC<GeneralPreferencesProps> = ({
               <option>Spanish</option>
               <option>French</option>
             </select>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Coming soon</p>
+            <p className="text-[10px] font-mono mt-1" style={{ color: colors.textDim }}>Coming soon</p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-xs font-mono uppercase tracking-wider mb-1.5" style={{ color: colors.textMuted }}>
               Time Zone
             </label>
             <select 
-              className="w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-gray-900 dark:text-gray-100"
+              className="w-full rounded-md border px-3 py-2 text-sm font-mono transition-colors focus:outline-none focus:ring-2 opacity-60 cursor-not-allowed"
+              style={{
+                backgroundColor: colors.panelAlt,
+                borderColor: colors.border,
+                color: colors.text,
+              }}
               disabled
             >
               <option>UTC-5 (Eastern)</option>
@@ -108,7 +176,7 @@ const GeneralPreferences: React.FC<GeneralPreferencesProps> = ({
               <option>UTC+0 (GMT)</option>
               <option>UTC+5:30 (IST)</option>
             </select>
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Coming soon</p>
+            <p className="text-[10px] font-mono mt-1" style={{ color: colors.textDim }}>Coming soon</p>
           </div>
         </div>
       </div>

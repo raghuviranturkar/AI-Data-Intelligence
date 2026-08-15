@@ -1,83 +1,139 @@
-import React from 'react'
-import { AlertTriangle, Trash2, RefreshCcw, XCircle } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { AlertTriangle, Trash2, RefreshCcw, XCircle, Activity } from 'lucide-react'
 import { Button } from '../../components/common/Button'
+import { cn } from '../../utils/cn'
 
 const DangerZone: React.FC = () => {
-  const handleAction = (action: string) => {
-    if (confirm(`Are you sure you want to ${action}? This action cannot be undone.`)) {
-      console.log(`Performing ${action}...`)
+  const [isDark, setIsDark] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      coral: '#F2555A',
+      teal: '#3ECF8E',
     }
   }
 
+  const handleAction = (action: string) => {
+    if (confirm(`Are you sure you want to ${action}? This action cannot be undone.`)) {
+      // Perform the action
+      if (action === 'clear session') {
+        localStorage.removeItem('appSettings')
+        localStorage.removeItem('analysisData')
+        setToast({ message: 'Session cleared successfully!', type: 'success' })
+      } else if (action === 'remove cached data') {
+        localStorage.clear()
+        setToast({ message: 'Cached data removed successfully!', type: 'success' })
+      } else if (action === 'reset settings') {
+        localStorage.removeItem('appSettings')
+        setToast({ message: 'Settings reset to defaults!', type: 'info' })
+      }
+      setTimeout(() => setToast(null), 5000)
+    }
+  }
+
+  const actions = [
+    { 
+      label: 'Clear Current Session', 
+      description: 'Remove all current analysis data',
+      icon: <Trash2 className="h-4 w-4" />,
+      action: 'clear session',
+      color: colors.accent.coral
+    },
+    { 
+      label: 'Remove Cached Data', 
+      description: 'Clear all cached files and results',
+      icon: <RefreshCcw className="h-4 w-4" />,
+      action: 'remove cached data',
+      color: colors.accent.amber
+    },
+    { 
+      label: 'Reset Settings', 
+      description: 'Restore all settings to defaults',
+      icon: <XCircle className="h-4 w-4" />,
+      action: 'reset settings',
+      color: colors.accent.amber
+    },
+  ]
+
   return (
-    <div className="bg-danger-50 dark:bg-danger-900/10 border-2 border-danger-200 dark:border-danger-800 rounded-xl p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <AlertTriangle className="h-5 w-5 text-danger-600 dark:text-danger-400" />
-        <h3 className="text-lg font-semibold text-danger-700 dark:text-danger-400">Danger Zone</h3>
+    <div 
+      className="rounded-lg border-2 p-5 transition-colors duration-300"
+      style={{ 
+        backgroundColor: isDark ? 'rgba(242,85,90,0.05)' : '#FEF2F2',
+        borderColor: isDark ? 'rgba(242,85,90,0.2)' : '#FECACA'
+      }}
+    >
+      {toast && (
+        <div 
+          className="mb-4 p-3 rounded-md border text-sm font-mono"
+          style={{ 
+            backgroundColor: isDark ? 'rgba(62,207,142,0.08)' : '#F0FDF4',
+            borderColor: isDark ? 'rgba(62,207,142,0.2)' : '#BBF7D0',
+            color: colors.accent.teal
+          }}
+        >
+          {toast.message}
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 mb-4">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: isDark ? 'rgba(242,85,90,0.08)' : '#FEF2F2',
+            borderColor: isDark ? 'rgba(242,85,90,0.2)' : '#FECACA'
+          }}
+        >
+          <AlertTriangle className="h-4 w-4" style={{ color: colors.accent.coral }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.accent.coral }}>Danger Zone</h3>
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-danger-200 dark:border-danger-800">
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">Clear Current Session</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Remove all current analysis data</p>
-          </div>
-          <Button
-            variant="danger"
-            size="sm"
-            icon={<Trash2 className="h-4 w-4" />}
-            onClick={() => handleAction('clear session')}
+        {actions.map((item, index) => (
+          <div 
+            key={index} 
+            className="flex items-center justify-between p-3 rounded-md border"
+            style={{ 
+              backgroundColor: colors.panel,
+              borderColor: colors.border
+            }}
           >
-            Clear
-          </Button>
-        </div>
-
-        <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-danger-200 dark:border-danger-800">
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">Remove Cached Data</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Clear all cached files and results</p>
+            <div>
+              <p className="text-sm font-medium" style={{ color: colors.text }}>{item.label}</p>
+              <p className="text-[10px] font-mono" style={{ color: colors.textMuted }}>{item.description}</p>
+            </div>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => handleAction(item.action)}
+              className="font-medium"
+            >
+              {item.icon}
+              <span className="ml-2">{item.label.split(' ')[0]}</span>
+            </Button>
           </div>
-          <Button
-            variant="danger"
-            size="sm"
-            icon={<RefreshCcw className="h-4 w-4" />}
-            onClick={() => handleAction('remove cached data')}
-          >
-            Remove
-          </Button>
-        </div>
+        ))}
 
-        <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-danger-200 dark:border-danger-800">
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">Reset Settings</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Restore all settings to defaults</p>
-          </div>
-          <Button
-            variant="danger"
-            size="sm"
-            icon={<XCircle className="h-4 w-4" />}
-            onClick={() => handleAction('reset settings')}
-          >
-            Reset
-          </Button>
-        </div>
-
-        <div className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg border border-danger-200 dark:border-danger-800 opacity-50 cursor-not-allowed">
-          <div>
-            <p className="text-sm font-medium text-gray-900 dark:text-white">Delete Workspace</p>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Permanently remove workspace and all data</p>
-          </div>
-          <Button
-            variant="danger"
-            size="sm"
-            icon={<Trash2 className="h-4 w-4" />}
-            disabled
-          >
-            Delete
-          </Button>
-        </div>
-
-        <p className="text-xs text-danger-600 dark:text-danger-400 mt-2">
+        <p className="text-[10px] font-mono" style={{ color: colors.accent.coral }}>
           ⚠️ These actions are irreversible. Proceed with caution.
         </p>
       </div>

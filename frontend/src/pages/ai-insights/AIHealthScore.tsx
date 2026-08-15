@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Award, Activity } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
+import { cn } from '../../utils/cn'
 
 interface AIHealthScoreProps {
   score: number
@@ -9,10 +10,37 @@ interface AIHealthScoreProps {
 }
 
 const AIHealthScore: React.FC<AIHealthScoreProps> = ({ score, confidence, datasetName }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      coral: '#F2555A',
+    }
+  }
+
   const getScoreColor = () => {
-    if (score >= 70) return 'text-success-500'
-    if (score >= 50) return 'text-warning-500'
-    return 'text-danger-500'
+    if (score >= 70) return colors.accent.teal
+    if (score >= 50) return colors.accent.amber
+    return colors.accent.coral
   }
 
   const getScoreLevel = () => {
@@ -22,9 +50,9 @@ const AIHealthScore: React.FC<AIHealthScoreProps> = ({ score, confidence, datase
   }
 
   const getScoreBg = () => {
-    if (score >= 70) return 'bg-success-500'
-    if (score >= 50) return 'bg-warning-500'
-    return 'bg-danger-500'
+    if (score >= 70) return colors.accent.teal
+    if (score >= 50) return colors.accent.amber
+    return colors.accent.coral
   }
 
   const confidenceColors = {
@@ -34,17 +62,32 @@ const AIHealthScore: React.FC<AIHealthScoreProps> = ({ score, confidence, datase
   } as const
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border-l-4 border-primary-500">
+    <div 
+      className="rounded-lg border p-6 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border,
+        borderLeft: `4px solid ${getScoreBg()}`
+      }}
+    >
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="p-3 rounded-lg bg-primary-50 dark:bg-primary-900/20">
-            <Award className="h-8 w-8 text-primary-600 dark:text-primary-400" />
+          <div 
+            className="p-3 rounded-md border"
+            style={{ 
+              backgroundColor: colors.panelAlt,
+              borderColor: colors.border
+            }}
+          >
+            <Award className="h-7 w-7" style={{ color: getScoreBg() }} />
           </div>
           <div>
-            <h2 className="text-sm font-medium text-gray-500 dark:text-gray-400">AI Health Score</h2>
-            <div className="flex items-center gap-3">
-              <span className="text-4xl font-bold text-gray-900 dark:text-white">{score}</span>
-              <span className="text-2xl font-bold text-gray-400 dark:text-gray-500">/ 100</span>
+            <h2 className="text-xs font-mono uppercase tracking-wider" style={{ color: colors.textMuted }}>
+              AI Health Score
+            </h2>
+            <div className="flex items-center gap-3 mt-0.5">
+              <span className="text-4xl font-bold" style={{ color: colors.text }}>{score}</span>
+              <span className="text-2xl font-bold" style={{ color: colors.textDim }}>/ 100</span>
               <Badge variant={confidenceColors[confidence as keyof typeof confidenceColors] || 'default'} size="md">
                 {confidence} Confidence
               </Badge>
@@ -52,18 +95,21 @@ const AIHealthScore: React.FC<AIHealthScoreProps> = ({ score, confidence, datase
           </div>
         </div>
 
-        <div className="flex-1 min-w-[200px]">
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600 dark:text-gray-300">{getScoreLevel()}</span>
-            <span className="text-gray-500 dark:text-gray-400">{score}%</span>
+        <div className="flex-1 min-w-[180px]">
+          <div className="flex justify-between text-xs font-mono mb-1">
+            <span style={{ color: getScoreBg() }}>{getScoreLevel()}</span>
+            <span style={{ color: colors.textMuted }}>{score}%</span>
           </div>
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+          <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: colors.border }}>
             <div 
-              className={`h-3 rounded-full transition-all duration-500 ${getScoreBg()}`}
-              style={{ width: `${score}%` }}
+              className="h-2 rounded-full transition-all duration-500"
+              style={{ 
+                width: `${score}%`,
+                backgroundColor: getScoreBg()
+              }}
             />
           </div>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-[10px] font-mono mt-1" style={{ color: colors.textDim }}>
             Dataset: {datasetName}
           </p>
         </div>

@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useData } from '../../context/DataContext'
 import { 
-  Loader2, AlertTriangle, FileText, RefreshCw, Globe
+  Loader2, AlertTriangle, FileText, RefreshCw, Globe, Download, History, Layers, FileSpreadsheet
 } from 'lucide-react'
 import { Button } from '../../components/common/Button'
+import { Badge } from '../../components/common/Badge'
 import { downloadReport } from '../../services/api'
 
 // Import sub-components
@@ -25,14 +26,53 @@ const Toast: React.FC<{ message: string; type: 'success' | 'error'; onClose: () 
   type, 
   onClose 
 }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    accent: {
+      teal: '#3ECF8E',
+      coral: '#F2555A',
+    }
+  }
+
   const bgColor = type === 'success' 
-    ? 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800 text-success-700 dark:text-success-400'
-    : 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800 text-danger-700 dark:text-danger-400'
+    ? isDark ? 'rgba(62,207,142,0.08)' : '#F0FDF4'
+    : isDark ? 'rgba(242,85,90,0.08)' : '#FEF2F2'
   
+  const borderColor = type === 'success'
+    ? isDark ? 'rgba(62,207,142,0.2)' : '#BBF7D0'
+    : isDark ? 'rgba(242,85,90,0.2)' : '#FECACA'
+  
+  const textColor = type === 'success'
+    ? colors.accent.teal
+    : colors.accent.coral
+
   return (
-    <div className={`${bgColor} border rounded-lg p-4 mb-4 flex items-center justify-between`}>
-      <span>{message}</span>
-      <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+    <div 
+      className="rounded-lg border p-4 mb-4 flex items-center justify-between"
+      style={{ 
+        backgroundColor: bgColor,
+        borderColor: borderColor
+      }}
+    >
+      <span style={{ color: textColor }}>{message}</span>
+      <button 
+        onClick={onClose} 
+        className="opacity-60 hover:opacity-100 transition-opacity"
+        style={{ color: textColor }}
+      >
         ✕
       </button>
     </div>
@@ -44,6 +84,41 @@ const ReportsPage: React.FC = () => {
   const [generating, setGenerating] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState<Record<string, boolean>>({})
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    bg: isDark ? '#0B0F14' : '#F1F4F8',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    border: isDark ? '#232B35' : '#E2E8F0',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      coral: '#F2555A',
+    }
+  }
+
+  const gridBgStyle = isDark 
+    ? {
+        backgroundImage: 'linear-gradient(to right, rgba(237,241,245,0.035) 1px, transparent 1px), linear-gradient(to bottom, rgba(237,241,245,0.035) 1px, transparent 1px)',
+        backgroundSize: '28px 28px',
+      }
+    : {
+        backgroundImage: 'linear-gradient(to right, rgba(15,23,42,0.04) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.04) 1px, transparent 1px)',
+        backgroundSize: '28px 28px',
+      }
 
   const sessionId = (data as any)?.session_id || null
 
@@ -99,35 +174,50 @@ const ReportsPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-12 w-12 text-primary-600 animate-spin" />
-        <p className="mt-4 text-gray-500 dark:text-gray-400">Loading reports...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ backgroundColor: colors.bg, ...gridBgStyle }}>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="w-16 h-16 rounded-full border-4 border-transparent animate-spin" 
+              style={{ borderTopColor: colors.accent.amber }} 
+            />
+          </div>
+          <p className="text-sm font-mono" style={{ color: colors.textMuted }}>Loading reports...</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <AlertTriangle className="h-12 w-12 text-danger-500" />
-        <p className="mt-4 text-gray-700 dark:text-gray-300 font-medium">Failed to load data</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{error}</p>
-        <Button className="mt-4" onClick={() => window.location.reload()}>
-          Retry
-        </Button>
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ backgroundColor: colors.bg, ...gridBgStyle }}>
+        <div className="flex flex-col items-center gap-4">
+          <AlertTriangle className="h-12 w-12" style={{ color: colors.accent.coral }} />
+          <p className="text-base font-medium" style={{ color: colors.text }}>Failed to load data</p>
+          <p className="text-sm font-mono" style={{ color: colors.textMuted }}>{error}</p>
+          <Button className="mt-2" onClick={() => window.location.reload()}>Retry</Button>
+        </div>
       </div>
     )
   }
 
   if (!data) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-        <FileText className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
-        <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">No Reports Available</h2>
-        <p className="text-gray-500 dark:text-gray-400 mt-2 max-w-md">
+      <div className="min-h-screen flex flex-col items-center justify-center text-center p-8" style={{ backgroundColor: colors.bg, ...gridBgStyle }}>
+        <div 
+          className="p-4 rounded-md border mb-4"
+          style={{ 
+            backgroundColor: colors.panel,
+            borderColor: colors.border
+          }}
+        >
+          <FileText className="h-16 w-16" style={{ color: colors.textMuted }} />
+        </div>
+        <h2 className="text-2xl font-bold" style={{ color: colors.text }}>No Reports Available</h2>
+        <p className="text-sm font-mono mt-2 max-w-md" style={{ color: colors.textMuted }}>
           Upload a dataset to generate professional AI analysis reports.
         </p>
         <Button variant="primary" size="lg" className="mt-6" onClick={() => window.location.href = '/upload'}>
+          <FileText className="h-4 w-4 mr-2" />
           Upload Dataset
         </Button>
       </div>
@@ -181,74 +271,117 @@ const ReportsPage: React.FC = () => {
   ]
 
   return (
-    <div className="space-y-6 pb-8">
-      {toast && (
-        <Toast 
-          message={toast.message} 
-          type={toast.type} 
-          onClose={() => setToast(null)} 
+    <div 
+      className="min-h-screen p-4 flex flex-col relative transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.bg,
+        ...gridBgStyle 
+      }}
+    >
+      <div className="flex flex-col max-w-7xl mx-auto w-full relative z-10 gap-4 py-4">
+        {toast && (
+          <Toast 
+            message={toast.message} 
+            type={toast.type} 
+            onClose={() => setToast(null)} 
+          />
+        )}
+
+        <ReportsHeader 
+          reportsCount={reports.length}
+          generatedAt="Today at 08:45 AM"
+          datasetName={dataset?.file_name || 'Unknown'}
+          onRegenerate={handleRegenerate}
+          regenerating={generating}
         />
-      )}
 
-      <ReportsHeader 
-        reportsCount={reports.length}
-        generatedAt="Today at 08:45 AM"
-        datasetName={dataset?.file_name || 'Unknown'}
-        onRegenerate={handleRegenerate}
-        regenerating={generating}
-      />
+        <ReportsOverview 
+          reportsCount={reports.length}
+          formats={['PDF', 'HTML', 'Markdown']}
+          status={sessionId ? 'Ready' : 'Not Generated'}
+          generatedAt="Today at 08:45 AM"
+          datasetName={dataset?.file_name || 'Unknown'}
+          healthScore={healthScore}
+        />
 
-      <ReportsOverview 
-        reportsCount={reports.length}
-        formats={['PDF', 'HTML', 'Markdown']}
-        status={sessionId ? 'Ready' : 'Not Generated'}
-        generatedAt="Today at 08:45 AM"
-        datasetName={dataset?.file_name || 'Unknown'}
-        healthScore={healthScore}
-      />
+        <ReportsPipeline />
 
-      <ReportsPipeline />
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div 
+              className="p-1.5 rounded-md border"
+              style={{ 
+                backgroundColor: isDark ? '#0B0F14' : '#F8FAFC',
+                borderColor: colors.border
+              }}
+            >
+              <FileSpreadsheet className="h-4 w-4" style={{ color: colors.accent.amber }} />
+            </div>
+            <h3 className="text-base font-semibold" style={{ color: colors.text }}>Available Reports</h3>
+            <Badge variant="info" size="sm">{reports.length} Reports</Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {reports.map((report) => (
+              <ReportCard
+                key={report.id}
+                report={report}
+                onDownload={() => handleDownload(report.format)}
+                downloading={downloadProgress[report.format] || false}
+              />
+            ))}
+          </div>
+        </div>
 
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Available Reports</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reports.map((report) => (
-            <ReportCard
-              key={report.id}
-              report={report}
-              onDownload={() => handleDownload(report.format)}
-              downloading={downloadProgress[report.format] || false}
-            />
-          ))}
+        <ReportContentSummary />
+        <ReportMetadata 
+          datasetName={dataset?.file_name || 'Unknown'}
+          rows={rows}
+          columns={columns}
+          qualityScore={qualityScore}
+          bestModel={bestModel}
+          generatedAt="Today at 08:45 AM"
+        />
+        <ExportComparison />
+        <ReportPreview 
+          rows={rows}
+          columns={columns}
+          qualityScore={qualityScore}
+          bestModel={bestModel}
+          healthScore={healthScore}
+        />
+        <ReportStatistics 
+          downloads={0}
+          reportsGenerated={reports.length}
+          avgGenerationTime="2.4s"
+          lastGenerated="Today at 08:45 AM"
+        />
+        <ShareOptions />
+        <RegenerateReports onRegenerate={handleRegenerate} regenerating={generating} />
+        <DownloadHistory />
+
+        {/* Footer */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-1 py-2 mt-2">
+          <span className="text-xs font-mono" style={{ color: colors.textMuted }}>
+            © 2026 AI Data Intelligence Platform
+          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono" style={{ color: colors.textMuted }}>
+              Version 2.0
+            </span>
+            <span className="w-px h-3" style={{ backgroundColor: colors.border }} />
+            <div className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+              <span className="text-xs font-mono" style={{ color: colors.accent.teal }}>
+                All systems operational
+              </span>
+            </div>
+            <span className="w-px h-3" style={{ backgroundColor: colors.border }} />
+            <span className="text-xs font-mono" style={{ color: colors.textMuted }}>
+              <span style={{ color: colors.accent.amber }}>●</span> Secure
+            </span>
+          </div>
         </div>
       </div>
-
-      <ReportContentSummary />
-      <ReportMetadata 
-        datasetName={dataset?.file_name || 'Unknown'}
-        rows={rows}
-        columns={columns}
-        qualityScore={qualityScore}
-        bestModel={bestModel}
-        generatedAt="Today at 08:45 AM"
-      />
-      <ExportComparison />
-      <ReportPreview 
-        rows={rows}
-        columns={columns}
-        qualityScore={qualityScore}
-        bestModel={bestModel}
-        healthScore={healthScore}
-      />
-      <ReportStatistics 
-        downloads={0}
-        reportsGenerated={reports.length}
-        avgGenerationTime="2.4s"
-        lastGenerated="Today at 08:45 AM"
-      />
-      <ShareOptions />
-      <RegenerateReports onRegenerate={handleRegenerate} regenerating={generating} />
-      <DownloadHistory />
     </div>
   )
 }

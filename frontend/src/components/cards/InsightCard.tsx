@@ -4,9 +4,6 @@ import {
   TrendingDown, 
   AlertTriangle, 
   Info, 
-  CheckCircle,
-  AlertCircle,
-  BarChart3,
   Activity
 } from 'lucide-react'
 import { cn } from '../../utils/cn'

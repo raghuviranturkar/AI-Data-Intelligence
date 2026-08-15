@@ -1,0 +1,211 @@
+
+> frontend@0.0.0 build
+> tsc -b && vite build
+
+src/components/charts/OutlierChart.tsx(2,10): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/components/charts/OutlierChart.tsx(2,56): error TS6133: 'TrendingDown' is declared but its value is never read.
+src/components/dashboard/DatasetOverview.tsx(11,3): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/components/dashboard/DatasetOverview.tsx(13,3): error TS6133: 'BarChart3' is declared but its value is never read.
+src/components/layout/Sidebar.tsx(6,3): error TS6133: 'BarChart3' is declared but its value is never read.
+src/components/layout/Sidebar.tsx(8,3): error TS6133: 'Brain' is declared but its value is never read.
+src/components/models/ModelDetailsModal.tsx(2,35): error TS6133: 'Clock' is declared but its value is never read.
+src/components/models/ModelDetailsModal.tsx(2,42): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/components/models/ModelDetailsModal.tsx(2,54): error TS6133: 'TrendingDown' is declared but its value is never read.
+src/components/models/ModelDetailsModal.tsx(3,1): error TS6133: 'Badge' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(4,3): error TS6133: 'Upload' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(8,3): error TS6133: 'Database' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(9,3): error TS6133: 'Brush' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(10,3): error TS6133: 'BarChart3' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(11,3): error TS6133: 'Settings' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(12,3): error TS6133: 'Brain' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(13,3): error TS6133: 'Shield' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(14,3): error TS6133: 'Lightbulb' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(15,3): error TS6133: 'FileText' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(36,3): error TS6133: 'currentStage' is declared but its value is never read.
+src/components/pipeline/HorizontalPipeline.tsx(70,17): error TS6133: 'isWaiting' is declared but its value is never read.
+src/components/pipeline/PipelineProgress.tsx(31,19): error TS6133: 'isActive' is declared but its value is never read.
+src/components/reports/ReportCenter.tsx(2,47): error TS6133: 'Clock' is declared but its value is never read.
+src/components/reports/ReportCenter.tsx(2,54): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/components/summary/AnalysisSessionSummary.tsx(8,3): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/components/summary/AnalysisSessionSummary.tsx(9,3): error TS6133: 'Award' is declared but its value is never read.
+src/components/timeline/AnalysisTimeline.tsx(73,29): error TS6133: 'index' is declared but its value is never read.
+src/context/AuthContext.tsx(1,65): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/context/AuthContext.tsx(3,1): error TS6133: 'jwtDecode' is declared but its value is never read.
+src/context/DataContext.tsx(1,54): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/context/WorkspaceContext.tsx(1,65): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/ai-insights/AIHealthScore.tsx(2,17): error TS6133: 'Activity' is declared but its value is never read.
+src/pages/ai-insights/AIHealthScore.tsx(12,9): error TS6133: 'getScoreColor' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(7,3): error TS6133: 'Lightbulb' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(8,3): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(9,3): error TS6133: 'TrendingDown' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(10,3): error TS6133: 'Brain' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(11,3): error TS6133: 'Shield' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(12,3): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(13,3): error TS6133: 'ArrowRight' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(14,3): error TS6133: 'Target' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(15,3): error TS6133: 'Award' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(20,3): error TS6133: 'Settings' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(21,3): error TS6133: 'GitBranch' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(22,3): error TS6133: 'Zap' is declared but its value is never read.
+src/pages/ai-insights/AIInsightsPage.tsx(26,1): error TS6133: 'Card' is declared but its value is never read.
+src/pages/ai-insights/DataQualityInsights.tsx(2,45): error TS6133: 'Info' is declared but its value is never read.
+src/pages/ai-insights/EDAInsights.tsx(2,33): error TS6133: 'TrendingDown' is declared but its value is never read.
+src/pages/ai-insights/ModelInsights.tsx(2,24): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/ai-insights/ModelInsights.tsx(4,1): error TS6133: 'Link' is declared but its value is never read.
+src/pages/ai-insights/RecommendationsNextSteps.tsx(2,27): error TS6133: 'ArrowRight' is declared but its value is never read.
+src/pages/ai-insights/StrengthsWeaknessesRisks.tsx(2,52): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/analysis/AIInsightsSection.tsx(2,49): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/analysis/AnalysisOverview.tsx(2,30): error TS6133: 'Award' is declared but its value is never read.
+src/pages/analysis/AnalysisPage.tsx(34,41): error TS2339: Property 'sectionName' does not exist on type '{ hasError: boolean; error: any; }'.
+src/pages/analysis/AnalysisPage.tsx(210,11): error TS2322: Type '({ label: string; value: boolean; status: string; } | { label: string; value: number; status: string; } | { label: string; value: string; status: string; })[]' is not assignable to type 'ValidationItem[]'.
+  Type '{ label: string; value: boolean; status: string; } | { label: string; value: number; status: string; } | { label: string; value: string; status: string; }' is not assignable to type 'ValidationItem'.
+    Type '{ label: string; value: boolean; status: string; }' is not assignable to type 'ValidationItem'.
+      Types of property 'status' are incompatible.
+        Type 'string' is not assignable to type '"error" | "success" | "warning" | "info"'.
+src/pages/analysis/AnalysisSummarySection.tsx(2,23): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/analysis/AnalysisSummarySection.tsx(2,30): error TS6133: 'Database' is declared but its value is never read.
+src/pages/analysis/AnalysisSummarySection.tsx(2,40): error TS6133: 'Brain' is declared but its value is never read.
+src/pages/analysis/AnalysisSummarySection.tsx(2,47): error TS6133: 'FileText' is declared but its value is never read.
+src/pages/analysis/DataQualitySection.tsx(2,17): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/pages/analysis/DataQualitySection.tsx(2,32): error TS6133: 'Copy' is declared but its value is never read.
+src/pages/analysis/DataQualitySection.tsx(2,38): error TS6133: 'Database' is declared but its value is never read.
+src/pages/analysis/DataQualitySection.tsx(2,48): error TS6133: 'FileX' is declared but its value is never read.
+src/pages/analysis/DataQualitySection.tsx(2,55): error TS6133: 'Hash' is declared but its value is never read.
+src/pages/analysis/FeatureEngineeringSection.tsx(2,20): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/analysis/FeatureEngineeringSection.tsx(2,33): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/pages/analysis/FeatureEngineeringSection.tsx(2,48): error TS6133: 'Info' is declared but its value is never read.
+src/pages/analysis/FeatureEngineeringSection.tsx(26,3): error TS6133: 'transformations' is declared but its value is never read.
+src/pages/analysis/OutlierAnalysisSection.tsx(2,25): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/analysis/OutlierAnalysisSection.tsx(2,37): error TS6133: 'TrendingDown' is declared but its value is never read.
+src/pages/analysis/OutlierAnalysisSection.tsx(2,51): error TS6133: 'Info' is declared but its value is never read.
+src/pages/analysis/TargetDetectionSection.tsx(2,18): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/analysis/TargetDetectionSection.tsx(2,31): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/pages/analysis/TargetDetectionSection.tsx(2,46): error TS6133: 'Info' is declared but its value is never read.
+src/pages/assistant/AssistantPage.tsx(11,3): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/pages/assistant/AssistantPage.tsx(12,3): error TS6133: 'Lightbulb' is declared but its value is never read.
+src/pages/assistant/AssistantPage.tsx(13,3): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/assistant/AssistantPage.tsx(74,28): error TS6133: 'dataLoading' is declared but its value is never read.
+src/pages/assistant/AssistantPage.tsx(85,32): error TS2339: Property 'file_name' does not exist on type '{}'.
+src/pages/assistant/AssistantPage.tsx(86,25): error TS2339: Property 'shape' does not exist on type '{}'.
+src/pages/assistant/AssistantPage.tsx(87,9): error TS6133: 'cols' is declared but its value is never read.
+src/pages/assistant/AssistantPage.tsx(87,25): error TS2339: Property 'shape' does not exist on type '{}'.
+src/pages/Dashboard/Dashboard.tsx(12,3): error TS6133: 'Download' is declared but its value is never read.
+src/pages/Dashboard/Dashboard.tsx(21,3): error TS6133: 'Users' is declared but its value is never read.
+src/pages/Dashboard/Dashboard.tsx(22,3): error TS6133: 'Zap' is declared but its value is never read.
+src/pages/Dashboard/Dashboard.tsx(25,3): error TS6133: 'Calendar' is declared but its value is never read.
+src/pages/Dashboard/Dashboard.tsx(33,1): error TS6133: 'Card' is declared but its value is never read.
+src/pages/Dashboard/Dashboard.tsx(37,7): error TS6133: 'QuickNavCard' is declared but its value is never read.
+src/pages/Dashboard/Dashboard.tsx(184,9): error TS6133: 'explainability' is declared but its value is never read.
+src/pages/Dashboard/Dashboard.tsx(190,9): error TS6133: 'healthConfidence' is declared but its value is never read.
+src/pages/datasets/DatasetsPage.tsx(4,60): error TS2307: Cannot find module '../../services/datasets' or its corresponding type declarations.
+src/pages/datasets/DatasetsPage.tsx(5,30): error TS2307: Cannot find module '../../services/datasets' or its corresponding type declarations.
+src/pages/datasets/DatasetsPage.tsx(10,3): error TS6133: 'StarOff' is declared but its value is never read.
+src/pages/datasets/DatasetsPage.tsx(11,3): error TS6133: 'MoreVertical' is declared but its value is never read.
+src/pages/datasets/DatasetsPage.tsx(19,3): error TS6133: 'Filter' is declared but its value is never read.
+src/pages/datasets/DatasetsPage.tsx(20,3): error TS6133: 'X' is declared but its value is never read.
+src/pages/datasets/DatasetsPage.tsx(28,37): error TS2307: Cannot find module 'date-fns' or its corresponding type declarations.
+src/pages/datasets/DatasetsPage.tsx(32,11): error TS2339: Property 'currentWorkspace' does not exist on type 'WorkspaceContextType'.
+src/pages/datasets/DatasetsPage.tsx(94,24): error TS6133: 'fileType' is declared but its value is never read.
+src/pages/explainability/DecisionBreakdown.tsx(2,1): error TS6192: All imports in import declaration are unused.
+src/pages/explainability/ExplainabilityHeader.tsx(17,3): error TS6133: 'mostImportantFeature' is declared but its value is never read.
+src/pages/explainability/ExplainabilityHeader.tsx(18,3): error TS6133: 'method' is declared but its value is never read.
+src/pages/explainability/ExplainabilityOverview.tsx(3,1): error TS6133: 'Badge' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(4,35): error TS6133: 'Brain' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(4,42): error TS6133: 'Sparkles' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(5,3): error TS6133: 'RefreshCw' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(5,14): error TS6133: 'Eye' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(5,19): error TS6133: 'BarChart3' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(5,30): error TS6133: 'ChevronDown' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(5,43): error TS6133: 'ChevronRight' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(8,1): error TS6133: 'Badge' is declared but its value is never read.
+src/pages/explainability/ExplainabilityPage.tsx(9,1): error TS6133: 'Card' is declared but its value is never read.
+src/pages/explainability/FeatureImportanceChart.tsx(62,17): error TS2322: Type '(value: any, name: string) => any' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(value: any, name: string) => any' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'name' and 'name' are incompatible.
+      Type 'NameType | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/pages/explainability/ResponsibleAIPanel.tsx(20,9): error TS6133: 'allPassed' is declared but its value is never read.
+src/pages/models/BestModelDetails.tsx(4,1): error TS6133: 'cn' is declared but its value is never read.
+src/pages/models/CandidateModels.tsx(2,17): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/models/CandidateModels.tsx(2,29): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/models/ConfusionMatrixDisplay.tsx(61,27): error TS7006: Parameter 'value' implicitly has an 'any' type.
+src/pages/models/ConfusionMatrixDisplay.tsx(61,34): error TS7006: Parameter 'j' implicitly has an 'any' type.
+src/pages/models/CrossValidationDisplay.tsx(2,1): error TS6192: All imports in import declaration are unused.
+src/pages/models/DeploymentReadiness.tsx(2,23): error TS6133: 'XCircle' is declared but its value is never read.
+src/pages/models/HyperparameterSummary.tsx(9,70): error TS6133: 'bestModel' is declared but its value is never read.
+src/pages/models/MetricsBreakdown.tsx(2,29): error TS6133: 'TrendingDown' is declared but its value is never read.
+src/pages/models/MetricsBreakdown.tsx(3,1): error TS6133: 'cn' is declared but its value is never read.
+src/pages/models/ModelLeaderboard.tsx(2,32): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/models/ModelLeaderboard.tsx(2,44): error TS6133: 'TrendingDown' is declared but its value is never read.
+src/pages/models/ModelsHeader.tsx(5,1): error TS6133: 'cn' is declared but its value is never read.
+src/pages/models/ModelsOverview.tsx(3,1): error TS6133: 'Badge' is declared but its value is never read.
+src/pages/models/ModelsPage.tsx(25,10): error TS6133: 'selectedModel' is declared but its value is never read.
+src/pages/models/ModelsPage.tsx(66,33): error TS2551: Property 'trained_models' does not exist on type 'AutoMLResult'. Did you mean 'ranked_models'?
+src/pages/models/ModelsPage.tsx(104,60): error TS2339: Property 'training_summary' does not exist on type 'AutoMLResult'.
+src/pages/models/PerformanceCharts.tsx(2,92): error TS6133: 'LineChart' is declared but its value is never read.
+src/pages/models/PerformanceCharts.tsx(2,103): error TS6133: 'Line' is declared but its value is never read.
+src/pages/Profile.tsx(23,13): error TS6133: 'resp' is declared but its value is never read.
+src/pages/reports/DownloadHistory.tsx(2,19): error TS6133: 'Download' is declared but its value is never read.
+src/pages/reports/DownloadHistory.tsx(2,29): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/reports/ReportCard.tsx(2,20): error TS6133: 'Eye' is declared but its value is never read.
+src/pages/reports/ReportsOverview.tsx(3,1): error TS6133: 'Badge' is declared but its value is never read.
+src/pages/reports/ReportsPage.tsx(4,37): error TS6133: 'RefreshCw' is declared but its value is never read.
+src/pages/settings/DataProcessing.tsx(2,20): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/pages/settings/DataProcessing.tsx(2,35): error TS6133: 'Filter' is declared but its value is never read.
+src/pages/settings/DataProcessing.tsx(2,43): error TS6133: 'Scale' is declared but its value is never read.
+src/pages/settings/DataProcessing.tsx(2,50): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/settings/FutureFeatures.tsx(2,55): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/settings/GeneralPreferences.tsx(2,17): error TS6133: 'LayoutDashboard' is declared but its value is never read.
+src/pages/settings/ModelPreferences.tsx(2,17): error TS6133: 'GitBranch' is declared but its value is never read.
+src/pages/settings/ModelPreferences.tsx(2,28): error TS6133: 'Clock' is declared but its value is never read.
+src/pages/settings/ModelPreferences.tsx(2,35): error TS6133: 'Shield' is declared but its value is never read.
+src/pages/settings/SettingsPage.tsx(1,27): error TS6133: 'useEffect' is declared but its value is never read.
+src/pages/settings/SettingsPage.tsx(2,1): error TS6192: All imports in import declaration are unused.
+src/pages/settings/SettingsPage.tsx(26,1): error TS6133: 'Button' is declared but its value is never read.
+src/pages/settings/SettingsPage.tsx(27,1): error TS6133: 'Badge' is declared but its value is never read.
+src/pages/settings/SettingsPage.tsx(70,18): error TS6133: 'toggleTheme' is declared but its value is never read.
+src/pages/settings/SystemStatus.tsx(24,9): error TS6133: 'statusLabels' is declared but its value is never read.
+src/pages/settings/VisualizationPreferences.tsx(2,41): error TS6133: 'MousePointer' is declared but its value is never read.
+src/pages/Upload.tsx(16,3): error TS6133: 'HardDrive' is declared but its value is never read.
+src/pages/Upload.tsx(17,3): error TS6133: 'Award' is declared but its value is never read.
+src/pages/Upload.tsx(18,3): error TS6133: 'Target' is declared but its value is never read.
+src/pages/Upload.tsx(25,3): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/Upload.tsx(78,10): error TS6133: 'currentStage' is declared but its value is never read.
+src/pages/Upload.tsx(463,43): error TS6133: 'index' is declared but its value is never read.
+src/pages/upload/Upload.tsx(1,35): error TS6133: 'useEffect' is declared but its value is never read.
+src/pages/upload/Upload.tsx(16,3): error TS6133: 'HardDrive' is declared but its value is never read.
+src/pages/upload/Upload.tsx(17,3): error TS6133: 'Award' is declared but its value is never read.
+src/pages/upload/Upload.tsx(18,3): error TS6133: 'Target' is declared but its value is never read.
+src/pages/upload/Upload.tsx(25,3): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/upload/Upload.tsx(78,10): error TS6133: 'currentStage' is declared but its value is never read.
+src/pages/upload/Upload.tsx(130,11): error TS6133: 'validTypes' is declared but its value is never read.
+src/pages/upload/Upload.tsx(296,9): error TS6133: 'getStatusColor' is declared but its value is never read.
+src/pages/upload/Upload.tsx(493,43): error TS6133: 'index' is declared but its value is never read.
+src/pages/visualizations/CategoryCharts.tsx(26,55): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(callbackfn: (previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown, initialValue: unknown): unknown', gave the following error.
+    Argument of type '(a: number, b: number) => number' is not assignable to parameter of type '(previousValue: unknown, currentValue: unknown, currentIndex: number, array: unknown[]) => unknown'.
+      Types of parameters 'a' and 'previousValue' are incompatible.
+        Type 'unknown' is not assignable to type 'number'.
+  Overload 2 of 3, '(callbackfn: (previousValue: number, currentValue: unknown, currentIndex: number, array: unknown[]) => number, initialValue: number): number', gave the following error.
+    Argument of type '(a: number, b: number) => number' is not assignable to parameter of type '(previousValue: number, currentValue: unknown, currentIndex: number, array: unknown[]) => number'.
+      Types of parameters 'b' and 'currentValue' are incompatible.
+        Type 'unknown' is not assignable to type 'number'.
+src/pages/visualizations/CategoryCharts.tsx(31,19): error TS18046: 'total' is of type 'unknown'.
+src/pages/visualizations/CategoryCharts.tsx(31,52): error TS18046: 'total' is of type 'unknown'.
+src/pages/visualizations/CategoryCharts.tsx(81,21): error TS2322: Type '(value: any, name: string) => any' is not assignable to type 'Formatter<ValueType, NameType> & ((value: ValueType, name: NameType, item: TooltipPayloadEntry, index: number, payload: TooltipPayload) => ReactNode | [...])'.
+  Type '(value: any, name: string) => any' is not assignable to type 'Formatter<ValueType, NameType>'.
+    Types of parameters 'name' and 'name' are incompatible.
+      Type 'NameType | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+src/pages/visualizations/CategoryCharts.tsx(87,32): error TS6133: 'entry' is declared but its value is never read.
+src/pages/visualizations/CorrelationCharts.tsx(2,1): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/visualizations/ExplainabilityCharts.tsx(2,18): error TS6133: 'CheckCircle' is declared but its value is never read.
+src/pages/visualizations/ExplainabilityCharts.tsx(2,31): error TS6133: 'AlertCircle' is declared but its value is never read.
+src/pages/visualizations/InsightsCharts.tsx(2,63): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/pages/visualizations/ModelComparisonCharts.tsx(16,9): error TS6133: 'bestModel' is declared but its value is never read.
+src/pages/visualizations/ModelPerformanceCharts.tsx(10,9): error TS6133: 'isDark' is declared but its value is never read.
+src/pages/visualizations/OutlierCharts.tsx(2,10): error TS6133: 'AlertTriangle' is declared but its value is never read.
+src/pages/visualizations/OverviewCharts.tsx(39,36): error TS6133: 'key' is declared but its value is never read.
+src/pages/visualizations/TargetCharts.tsx(46,34): error TS6133: 'entry' is declared but its value is never read.
+src/pages/visualizations/VisualizationsPage.tsx(114,14): error TS2741: Property 'children' is missing in type '{ variant: "ghost"; size: "sm"; icon: Element; "aria-label": string; }' but required in type 'ButtonProps'.
+src/pages/workspaces/WorkspacesPage.tsx(5,45): error TS6133: 'X' is declared but its value is never read.

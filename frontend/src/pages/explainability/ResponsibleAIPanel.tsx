@@ -1,11 +1,37 @@
-import React from 'react'
-import { CheckCircle, Shield } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { CheckCircle, Shield, Sparkles } from 'lucide-react'
+import { cn } from '../../utils/cn'
 
 interface ResponsibleAIPanelProps {
   shapAvailable: boolean
 }
 
 const ResponsibleAIPanel: React.FC<ResponsibleAIPanelProps> = ({ shapAvailable }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+    }
+  }
+
   const items = [
     { label: 'Explainable', status: true },
     { label: 'Feature Importance Available', status: true },
@@ -20,22 +46,44 @@ const ResponsibleAIPanel: React.FC<ResponsibleAIPanelProps> = ({ shapAvailable }
   const allPassed = items.every(item => item.status)
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6 border-l-4 border-green-500">
-      <div className="flex items-center gap-2 mb-4">
-        <Shield className="h-5 w-5 text-green-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Responsible AI</h3>
-        <span className="text-sm text-green-600 dark:text-green-400 font-medium">✓ All checks passed</span>
+    <div 
+      className="rounded-lg border p-5 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border,
+        borderLeft: `4px solid ${colors.accent.teal}`
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <Shield className="h-4 w-4" style={{ color: colors.accent.teal }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Responsible AI</h3>
+        <span className="text-xs font-mono" style={{ color: colors.accent.teal }}>✓ All checks passed</span>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
         {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
+          <div 
+            key={item.label} 
+            className="flex items-center gap-2 p-2 rounded-md border"
+            style={{ 
+              backgroundColor: colors.panelAlt,
+              borderColor: colors.border
+            }}
+          >
             {item.status ? (
-              <CheckCircle className="h-4 w-4 text-success-500" />
+              <CheckCircle className="h-3.5 w-3.5" style={{ color: colors.accent.teal }} />
             ) : (
-              <div className="h-4 w-4 rounded-full border-2 border-gray-300 dark:border-gray-600" />
+              <div className="h-3.5 w-3.5 rounded-full border-2" style={{ borderColor: colors.textDim }} />
             )}
-            <span className={`text-sm ${item.status ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-500'}`}>
+            <span className={`text-[10px] font-mono ${item.status ? '' : 'opacity-60'}`} style={{ color: item.status ? colors.text : colors.textMuted }}>
               {item.label}
             </span>
           </div>

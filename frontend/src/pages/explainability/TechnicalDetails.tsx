@@ -1,5 +1,6 @@
-import React from 'react'
-import { ChevronDown, ChevronRight, Info } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { ChevronDown, ChevronRight, Info, Terminal } from 'lucide-react'
+import { cn } from '../../utils/cn'
 
 interface TechnicalDetailsProps {
   shapAvailable: boolean
@@ -20,52 +21,89 @@ const TechnicalDetails: React.FC<TechnicalDetailsProps> = ({
   expanded,
   onToggle,
 }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      azure: '#4EA1F0',
+    }
+  }
+
+  const details = [
+    { label: 'Explanation Method', value: method },
+    { label: 'Model', value: modelName },
+    { label: 'Features Used', value: featureCount },
+    { label: 'SHAP Available', value: shapAvailable ? 'Yes' : 'No' },
+    { label: 'Generated At', value: new Date(generatedAt).toLocaleString() },
+    { label: 'Pipeline Version', value: '1.0.0' },
+  ]
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
+    <div 
+      className="rounded-lg border p-5 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
       <button
         onClick={onToggle}
         className="flex items-center justify-between w-full text-left"
       >
-        <div className="flex items-center gap-2">
-          <Info className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Technical Details</h3>
+        <div className="flex items-center gap-3">
+          <div 
+            className="p-1.5 rounded-md border"
+            style={{ 
+              backgroundColor: colors.panelAlt,
+              borderColor: colors.border
+            }}
+          >
+            <Terminal className="h-4 w-4" style={{ color: colors.accent.amber }} />
+          </div>
+          <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Technical Details</h3>
         </div>
         {expanded ? (
-          <ChevronDown className="h-5 w-5 text-gray-400" />
+          <ChevronDown className="h-4 w-4" style={{ color: colors.textDim }} />
         ) : (
-          <ChevronRight className="h-5 w-5 text-gray-400" />
+          <ChevronRight className="h-4 w-4" style={{ color: colors.textDim }} />
         )}
       </button>
 
       {expanded && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Explanation Method</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{method}</p>
-            </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Model</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{modelName}</p>
-            </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Features Used</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{featureCount}</p>
-            </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-xs text-gray-500 dark:text-gray-400">SHAP Available</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{shapAvailable ? 'Yes' : 'No'}</p>
-            </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Generated At</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">
-                {new Date(generatedAt).toLocaleString()}
-              </p>
-            </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-xs text-gray-500 dark:text-gray-400">Pipeline Version</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">1.0.0</p>
-            </div>
+        <div className="mt-4 pt-4 border-t" style={{ borderColor: colors.border }}>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {details.map((item, index) => (
+              <div 
+                key={index} 
+                className="p-3 rounded-md border"
+                style={{ 
+                  backgroundColor: colors.panelAlt,
+                  borderColor: colors.border
+                }}
+              >
+                <p className="text-[10px] font-mono uppercase tracking-wider" style={{ color: colors.textMuted }}>
+                  {item.label}
+                </p>
+                <p className="text-xs font-medium mt-0.5" style={{ color: colors.text }}>{item.value}</p>
+              </div>
+            ))}
           </div>
         </div>
       )}

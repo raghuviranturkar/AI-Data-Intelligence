@@ -1,5 +1,5 @@
-import React from 'react'
-import { AlertTriangle, TrendingUp, TrendingDown, Info } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { AlertTriangle, TrendingUp, TrendingDown, Info, Shield, Activity } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { cn } from '../../utils/cn'
 
@@ -29,11 +29,50 @@ const OutlierAnalysisSection: React.FC<OutlierAnalysisSectionProps> = ({
   summary,
   className,
 }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      coral: '#F2555A',
+    }
+  }
+
   const severityColors = {
-    High: 'bg-danger-50 dark:bg-danger-900/20 border-danger-200 dark:border-danger-800',
-    Medium: 'bg-warning-50 dark:bg-warning-900/20 border-warning-200 dark:border-warning-800',
-    Low: 'bg-success-50 dark:bg-success-900/20 border-success-200 dark:border-success-800',
-    None: 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700',
+    High: {
+      border: isDark ? 'rgba(242,85,90,0.2)' : '#FECACA',
+      bg: isDark ? 'rgba(242,85,90,0.05)' : '#FEF2F2',
+    },
+    Medium: {
+      border: isDark ? 'rgba(240,169,78,0.2)' : '#FDE68A',
+      bg: isDark ? 'rgba(240,169,78,0.05)' : '#FFFBEB',
+    },
+    Low: {
+      border: isDark ? 'rgba(62,207,142,0.2)' : '#BBF7D0',
+      bg: isDark ? 'rgba(62,207,142,0.05)' : '#F0FDF4',
+    },
+    None: {
+      border: colors.border,
+      bg: colors.panelAlt,
+    },
   }
 
   const severityBadges = {
@@ -43,65 +82,108 @@ const OutlierAnalysisSection: React.FC<OutlierAnalysisSectionProps> = ({
     None: { label: 'None', variant: 'default' as const },
   }
 
+  const severityColors_ = {
+    High: colors.accent.coral,
+    Medium: colors.accent.amber,
+    Low: colors.accent.teal,
+    None: colors.textDim,
+  }
+
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex items-center gap-2">
-        <AlertTriangle className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Outlier Analysis</h3>
+      <div className="flex items-center gap-3">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <Shield className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Outlier Analysis</h3>
         <Badge variant="info" size="sm">{features.length} Features</Badge>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Total Outliers</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">{summary.total_outliers}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div 
+          className="rounded-md border p-3"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <p className="text-[10px] font-mono uppercase tracking-wider" style={{ color: colors.textMuted }}>Total Outliers</p>
+          <p className="text-xl font-bold" style={{ color: colors.text }}>{summary.total_outliers}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Columns Affected</p>
-          <p className="text-xl font-bold text-gray-900 dark:text-white">{summary.columns_with_outliers}</p>
+        <div 
+          className="rounded-md border p-3"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <p className="text-[10px] font-mono uppercase tracking-wider" style={{ color: colors.textMuted }}>Columns Affected</p>
+          <p className="text-xl font-bold" style={{ color: colors.text }}>{summary.columns_with_outliers}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Highest Risk</p>
-          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{summary.highest_risk_column || 'None'}</p>
+        <div 
+          className="rounded-md border p-3"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <p className="text-[10px] font-mono uppercase tracking-wider" style={{ color: colors.textMuted }}>Highest Risk</p>
+          <p className="text-xs font-medium truncate" style={{ color: colors.text }}>{summary.highest_risk_column || 'None'}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-          <p className="text-xs text-gray-500 dark:text-gray-400">Risk Ranking</p>
-          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+        <div 
+          className="rounded-md border p-3"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <p className="text-[10px] font-mono uppercase tracking-wider" style={{ color: colors.textMuted }}>Risk Ranking</p>
+          <p className="text-xs font-medium truncate" style={{ color: colors.text }}>
             {summary.ranking.slice(0, 3).join(' → ') || 'N/A'}
           </p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {features.map((feature) => {
           const badge = severityBadges[feature.severity as keyof typeof severityBadges] || severityBadges.None
+          const severityStyle = severityColors[feature.severity as keyof typeof severityColors] || severityColors.None
+          const severityColor = severityColors_[feature.severity as keyof typeof severityColors_] || colors.textDim
+
           return (
             <div
               key={feature.column}
-              className={cn(
-                'rounded-lg border p-4',
-                severityColors[feature.severity as keyof typeof severityColors] || severityColors.None
-              )}
+              className="rounded-md border p-3.5 transition-all duration-200 hover:shadow-lg"
+              style={{ 
+                backgroundColor: severityStyle.bg,
+                borderColor: severityStyle.border
+              }}
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">{feature.column}</p>
+                  <p className="text-sm font-medium" style={{ color: colors.text }}>{feature.column}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <Badge variant={badge.variant} size="sm">{badge.label}</Badge>
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                    <span className="text-[10px] font-mono" style={{ color: colors.textMuted }}>
                       {feature.outlier_count} outliers ({feature.outlier_percentage.toFixed(1)}%)
                     </span>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Risk Score</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-white">{feature.risk_score}</p>
+                  <p className="text-[10px] font-mono" style={{ color: colors.textMuted }}>Risk Score</p>
+                  <p className="text-sm font-bold" style={{ color: severityColor }}>{feature.risk_score}</p>
                 </div>
               </div>
-              <div className="mt-2 flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+              <div className="mt-2 flex items-center gap-4 text-[10px] font-mono" style={{ color: colors.textMuted }}>
                 <span>Distribution: {feature.distribution}</span>
-                <span>•</span>
-                <span className="text-gray-600 dark:text-gray-300">{feature.recommendation}</span>
+                <span className="w-px h-3" style={{ backgroundColor: colors.border }} />
+                <span style={{ color: colors.textDim }}>{feature.recommendation}</span>
               </div>
             </div>
           )

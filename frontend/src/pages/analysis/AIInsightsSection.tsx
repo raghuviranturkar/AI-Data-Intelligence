@@ -1,5 +1,5 @@
-import React from 'react'
-import { Lightbulb, CheckCircle, AlertTriangle, TrendingUp, TrendingDown, List } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Lightbulb, CheckCircle, AlertTriangle, TrendingUp, TrendingDown, List, Sparkles } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { cn } from '../../utils/cn'
 
@@ -27,19 +27,66 @@ const AIInsightsSection: React.FC<AIInsightsSectionProps> = ({
   healthScore,
   className,
 }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      coral: '#F2555A',
+    }
+  }
+
+  const confidenceColors = {
+    High: colors.accent.teal,
+    Medium: colors.accent.amber,
+    Low: colors.accent.coral,
+  }
+
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex items-center gap-2">
-        <Lightbulb className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">AI Insights</h3>
+      <div className="flex items-center gap-3">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <Sparkles className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>AI Insights</h3>
         <Badge variant="info" size="sm">Business Intelligence</Badge>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div 
+        className="rounded-md border p-4"
+        style={{ 
+          backgroundColor: colors.panelAlt,
+          borderColor: colors.border
+        }}
+      >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">AI Health Score</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{healthScore.score}/100</p>
+            <p className="text-[10px] font-mono uppercase tracking-wider" style={{ color: colors.textMuted }}>AI Health Score</p>
+            <p className="text-2xl font-bold" style={{ color: colors.text }}>{healthScore.score}/100</p>
           </div>
           <Badge variant={healthScore.confidence === 'High' ? 'success' : 'warning'} size="md">
             {healthScore.confidence} Confidence
@@ -47,23 +94,35 @@ const AIInsightsSection: React.FC<AIInsightsSectionProps> = ({
         </div>
       </div>
 
-      <div className="bg-primary-50 dark:bg-primary-900/20 rounded-lg border border-primary-200 dark:border-primary-800 p-4">
-        <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+      <div 
+        className="rounded-md p-4 border"
+        style={{ 
+          backgroundColor: isDark ? 'rgba(240,169,78,0.05)' : '#FFFBEB',
+          borderColor: isDark ? 'rgba(240,169,78,0.2)' : '#FDE68A'
+        }}
+      >
+        <p className="text-xs font-mono leading-relaxed" style={{ color: colors.textMuted }}>
           {executiveSummary}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {strengths.length > 0 && (
-          <div className="bg-success-50 dark:bg-success-900/20 rounded-lg border border-success-200 dark:border-success-800 p-4">
+          <div 
+            className="rounded-md p-3.5 border"
+            style={{ 
+              backgroundColor: isDark ? 'rgba(62,207,142,0.05)' : '#F0FDF4',
+              borderColor: isDark ? 'rgba(62,207,142,0.2)' : '#BBF7D0'
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <CheckCircle className="h-4 w-4 text-success-500" />
-              <p className="font-medium text-success-700 dark:text-success-400">Strengths</p>
+              <CheckCircle className="h-4 w-4" style={{ color: colors.accent.teal }} />
+              <p className="text-xs font-semibold" style={{ color: colors.accent.teal }}>Strengths</p>
             </div>
             <ul className="space-y-1">
               {strengths.map((item, i) => (
-                <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                  <span className="text-success-500">•</span>
+                <li key={i} className="text-xs font-mono flex items-start gap-2" style={{ color: colors.textMuted }}>
+                  <span className="text-[10px]" style={{ color: colors.accent.teal }}>▸</span>
                   {item}
                 </li>
               ))}
@@ -72,15 +131,21 @@ const AIInsightsSection: React.FC<AIInsightsSectionProps> = ({
         )}
 
         {weaknesses.length > 0 && (
-          <div className="bg-danger-50 dark:bg-danger-900/20 rounded-lg border border-danger-200 dark:border-danger-800 p-4">
+          <div 
+            className="rounded-md p-3.5 border"
+            style={{ 
+              backgroundColor: isDark ? 'rgba(242,85,90,0.05)' : '#FEF2F2',
+              borderColor: isDark ? 'rgba(242,85,90,0.2)' : '#FECACA'
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <TrendingDown className="h-4 w-4 text-danger-500" />
-              <p className="font-medium text-danger-700 dark:text-danger-400">Weaknesses</p>
+              <TrendingDown className="h-4 w-4" style={{ color: colors.accent.coral }} />
+              <p className="text-xs font-semibold" style={{ color: colors.accent.coral }}>Weaknesses</p>
             </div>
             <ul className="space-y-1">
               {weaknesses.map((item, i) => (
-                <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                  <span className="text-danger-500">•</span>
+                <li key={i} className="text-xs font-mono flex items-start gap-2" style={{ color: colors.textMuted }}>
+                  <span className="text-[10px]" style={{ color: colors.accent.coral }}>▸</span>
                   {item}
                 </li>
               ))}
@@ -89,15 +154,21 @@ const AIInsightsSection: React.FC<AIInsightsSectionProps> = ({
         )}
 
         {risks.length > 0 && (
-          <div className="bg-warning-50 dark:bg-warning-900/20 rounded-lg border border-warning-200 dark:border-warning-800 p-4">
+          <div 
+            className="rounded-md p-3.5 border"
+            style={{ 
+              backgroundColor: isDark ? 'rgba(240,169,78,0.05)' : '#FFFBEB',
+              borderColor: isDark ? 'rgba(240,169,78,0.2)' : '#FDE68A'
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-4 w-4 text-warning-500" />
-              <p className="font-medium text-warning-700 dark:text-warning-400">Risks</p>
+              <AlertTriangle className="h-4 w-4" style={{ color: colors.accent.amber }} />
+              <p className="text-xs font-semibold" style={{ color: colors.accent.amber }}>Risks</p>
             </div>
             <ul className="space-y-1">
               {risks.map((item, i) => (
-                <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                  <span className="text-warning-500">•</span>
+                <li key={i} className="text-xs font-mono flex items-start gap-2" style={{ color: colors.textMuted }}>
+                  <span className="text-[10px]" style={{ color: colors.accent.amber }}>▸</span>
                   {item}
                 </li>
               ))}
@@ -106,15 +177,21 @@ const AIInsightsSection: React.FC<AIInsightsSectionProps> = ({
         )}
 
         {recommendations.length > 0 && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4">
+          <div 
+            className="rounded-md p-3.5 border"
+            style={{ 
+              backgroundColor: isDark ? 'rgba(78,161,240,0.05)' : '#EFF6FF',
+              borderColor: isDark ? 'rgba(78,161,240,0.2)' : '#BFDBFE'
+            }}
+          >
             <div className="flex items-center gap-2 mb-2">
-              <Lightbulb className="h-4 w-4 text-blue-500" />
-              <p className="font-medium text-blue-700 dark:text-blue-400">Recommendations</p>
+              <Lightbulb className="h-4 w-4" style={{ color: colors.accent.azure }} />
+              <p className="text-xs font-semibold" style={{ color: colors.accent.azure }}>Recommendations</p>
             </div>
             <ul className="space-y-1">
               {recommendations.map((item, i) => (
-                <li key={i} className="text-sm text-gray-700 dark:text-gray-300 flex items-start gap-2">
-                  <span className="text-blue-500">•</span>
+                <li key={i} className="text-xs font-mono flex items-start gap-2" style={{ color: colors.textMuted }}>
+                  <span className="text-[10px]" style={{ color: colors.accent.azure }}>▸</span>
                   {item}
                 </li>
               ))}
@@ -124,15 +201,21 @@ const AIInsightsSection: React.FC<AIInsightsSectionProps> = ({
       </div>
 
       {nextSteps.length > 0 && (
-        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+        <div 
+          className="rounded-md p-4 border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
           <div className="flex items-center gap-2 mb-2">
-            <List className="h-4 w-4 text-gray-500" />
-            <p className="font-medium text-gray-700 dark:text-gray-300">Next Steps</p>
+            <List className="h-4 w-4" style={{ color: colors.textMuted }} />
+            <p className="text-xs font-semibold" style={{ color: colors.text }}>Next Steps</p>
           </div>
           <ul className="space-y-1">
             {nextSteps.map((step, i) => (
-              <li key={i} className="text-sm text-gray-600 dark:text-gray-300 flex items-start gap-2">
-                <span className="text-gray-400">{i + 1}.</span>
+              <li key={i} className="text-xs font-mono flex items-start gap-2" style={{ color: colors.textMuted }}>
+                <span className="text-[10px]" style={{ color: colors.textDim }}>{i + 1}.</span>
                 {step}
               </li>
             ))}

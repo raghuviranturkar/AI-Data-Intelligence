@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Award, TrendingUp, Clock, Eye } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { Button } from '../../components/common/Button'
@@ -15,19 +15,69 @@ const CandidateModels: React.FC<CandidateModelsProps> = ({
   bestModelName,
   onSelectModel,
 }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+    }
+  }
+
   if (rankedModels.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Candidate Models</h3>
-        <p className="text-gray-400 dark:text-gray-500">No models available</p>
+      <div 
+        className="rounded-lg border p-6 transition-colors duration-300"
+        style={{ 
+          backgroundColor: colors.panel,
+          borderColor: colors.border
+        }}
+      >
+        <h3 className="text-base font-semibold" style={{ color: colors.text }}>Candidate Models</h3>
+        <p className="text-sm font-mono mt-2" style={{ color: colors.textMuted }}>No models available</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Candidate Models</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+    <div 
+      className="rounded-lg border p-6 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <TrendingUp className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-base font-semibold" style={{ color: colors.text }}>Candidate Models</h3>
+        <Badge variant="info" size="sm">{rankedModels.length}</Badge>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
         {rankedModels.map((model) => {
           const isBest = model.model_name === bestModelName
           const score = model.score || 0
@@ -36,19 +86,23 @@ const CandidateModels: React.FC<CandidateModelsProps> = ({
             <div
               key={model.model_name}
               className={cn(
-                'rounded-lg border p-4 transition-all duration-200 hover:shadow-md',
+                'rounded-md border p-4 transition-all duration-200',
                 isBest
-                  ? 'border-yellow-400 dark:border-yellow-600 bg-yellow-50/50 dark:bg-yellow-900/10'
-                  : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30'
+                  ? 'border-[#F0A94E] bg-[#F0A94E]/5'
+                  : 'border-[#232B35] bg-[#0B0F14]'
               )}
+              style={{
+                borderColor: isBest ? colors.accent.amber : colors.border,
+                backgroundColor: isBest ? 'rgba(240,169,78,0.05)' : colors.panelAlt
+              }}
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                    <p className="font-medium truncate text-sm" style={{ color: colors.text }}>
                       {model.model_name}
                     </p>
-                    {isBest && <Award className="h-4 w-4 text-yellow-500 flex-shrink-0" />}
+                    {isBest && <Award className="h-4 w-4 flex-shrink-0" style={{ color: colors.accent.amber }} />}
                   </div>
                   {isBest && (
                     <Badge variant="success" size="sm">🏆 Best Model</Badge>
@@ -64,24 +118,27 @@ const CandidateModels: React.FC<CandidateModelsProps> = ({
                 </Button>
               </div>
 
-              <div className="mt-3 grid grid-cols-2 gap-1 text-xs">
-                <div className="text-gray-500 dark:text-gray-400">Score</div>
-                <div className="text-right font-medium text-gray-900 dark:text-white">
+              <div className="mt-3 grid grid-cols-2 gap-1 text-xs font-mono">
+                <div style={{ color: colors.textMuted }}>Score</div>
+                <div className="text-right font-medium" style={{ color: colors.text }}>
                   {score ? (score * 100).toFixed(1) : 'N/A'}%
                 </div>
-                <div className="text-gray-500 dark:text-gray-400">Rank</div>
-                <div className="text-right font-medium text-gray-900 dark:text-white">
+                <div style={{ color: colors.textMuted }}>Rank</div>
+                <div className="text-right font-medium" style={{ color: colors.text }}>
                   #{model.rank}
                 </div>
               </div>
 
-              <div className="mt-2 w-full bg-gray-200 dark:bg-gray-600 rounded-full h-1">
+              <div className="mt-2 w-full rounded-full h-1" style={{ backgroundColor: colors.border }}>
                 <div
                   className={cn(
                     'h-1 rounded-full transition-all duration-500',
-                    isBest ? 'bg-yellow-500' : 'bg-primary-600'
+                    isBest ? 'bg-[#F0A94E]' : 'bg-[#4EA1F0]'
                   )}
-                  style={{ width: `${Math.min(score * 100, 100)}%` }}
+                  style={{ 
+                    width: `${Math.min(score * 100, 100)}%`,
+                    backgroundColor: isBest ? colors.accent.amber : colors.accent.azure
+                  }}
                 />
               </div>
             </div>

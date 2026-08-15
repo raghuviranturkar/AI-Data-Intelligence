@@ -1,18 +1,63 @@
-import React from 'react'
-import { TrendingUp, TrendingDown } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { TrendingUp, TrendingDown, GitBranch } from 'lucide-react'
+import { cn } from '../../utils/cn'
 
 interface DecisionBreakdownProps {
   localExplanation: any
 }
 
 const DecisionBreakdown: React.FC<DecisionBreakdownProps> = ({ localExplanation }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      coral: '#F2555A',
+    }
+  }
+
   const contributions = localExplanation?.feature_contributions || []
 
   if (contributions.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Decision Breakdown</h3>
-        <p className="text-gray-400 dark:text-gray-500">No contribution data available</p>
+      <div 
+        className="rounded-lg border p-5 transition-colors duration-300"
+        style={{ 
+          backgroundColor: colors.panel,
+          borderColor: colors.border
+        }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div 
+            className="p-1.5 rounded-md border"
+            style={{ 
+              backgroundColor: colors.panelAlt,
+              borderColor: colors.border
+            }}
+          >
+            <GitBranch className="h-4 w-4" style={{ color: colors.accent.amber }} />
+          </div>
+          <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Decision Breakdown</h3>
+        </div>
+        <p className="text-sm font-mono" style={{ color: colors.textMuted }}>No contribution data available</p>
       </div>
     )
   }
@@ -20,33 +65,50 @@ const DecisionBreakdown: React.FC<DecisionBreakdownProps> = ({ localExplanation 
   const maxContribution = Math.max(...contributions.map((c: any) => Math.abs(c.shap_value || 0)))
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Decision Breakdown</h3>
-      <div className="space-y-3">
+    <div 
+      className="rounded-lg border p-5 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <GitBranch className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Decision Breakdown</h3>
+      </div>
+
+      <div className="space-y-2.5">
         {contributions.slice(0, 8).map((item: any, index: number) => {
           const value = item.shap_value || 0
           const isPositive = value > 0
           const intensity = Math.min(Math.abs(value) / (maxContribution || 1), 1)
 
           return (
-            <div key={index} className="flex items-center gap-4">
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300 w-24 truncate">
+            <div key={index} className="flex items-center gap-3">
+              <span className="text-xs font-medium truncate w-24" style={{ color: colors.text }}>
                 {item.feature}
               </span>
-              <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-4 overflow-hidden">
+              <div className="flex-1 h-3 rounded-full overflow-hidden" style={{ backgroundColor: colors.border }}>
                 <div
-                  className={`h-4 rounded-full transition-all duration-500 ${
-                    isPositive ? 'bg-success-500' : 'bg-danger-500'
-                  }`}
+                  className="h-3 rounded-full transition-all duration-500"
                   style={{
                     width: `${Math.abs(intensity * 100)}%`,
+                    backgroundColor: isPositive ? colors.accent.teal : colors.accent.coral,
                     float: isPositive ? 'left' : 'right',
                   }}
                 />
               </div>
               <span
-                className={`text-sm font-medium w-16 text-right ${
-                  isPositive ? 'text-success-600 dark:text-success-400' : 'text-danger-600 dark:text-danger-400'
+                className={`text-xs font-mono w-16 text-right ${
+                  isPositive ? 'text-[#3ECF8E]' : 'text-[#F2555A]'
                 }`}
               >
                 {isPositive ? '+' : ''}{(value * 100).toFixed(0)}%

@@ -1,48 +1,98 @@
-import React from 'react'
-import { Info, GitBranch, Code, Brain, Database, Shield } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Info, GitBranch, Code, Brain, Database, Shield, Sparkles, Activity } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
+import { cn } from '../../utils/cn'
 
 const AboutSection: React.FC = () => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      purple: '#B48CF2',
+    }
+  }
+
+  const features = [
+    { label: 'AutoML', icon: <Brain className="h-4 w-4" />, color: colors.accent.amber },
+    { label: 'Explainability', icon: <Shield className="h-4 w-4" />, color: colors.accent.teal },
+    { label: 'Data Intelligence', icon: <Database className="h-4 w-4" />, color: colors.accent.azure },
+    { label: 'FastAPI + React', icon: <Code className="h-4 w-4" />, color: colors.accent.purple },
+  ]
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <Info className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">About</h3>
+    <div 
+      className="rounded-lg border p-5 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <Info className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>About</h3>
         <Badge variant="info" size="sm">v1.0.0</Badge>
       </div>
 
       <div className="space-y-3">
-        <p className="text-sm text-gray-700 dark:text-gray-300">
-          <span className="font-bold">AI Data Intelligence</span> is a comprehensive data intelligence platform
+        <p className="text-sm font-mono leading-relaxed" style={{ color: colors.textMuted }}>
+          <span className="font-bold" style={{ color: colors.text }}>AI Data Intelligence</span> is a comprehensive data intelligence platform
           that automates the entire data science lifecycle from upload to insights.
         </p>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-            <Brain className="h-4 w-4 text-primary-500" />
-            <span className="text-xs text-gray-600 dark:text-gray-300">AutoML</span>
-          </div>
-          <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-            <Shield className="h-4 w-4 text-success-500" />
-            <span className="text-xs text-gray-600 dark:text-gray-300">Explainability</span>
-          </div>
-          <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-            <Database className="h-4 w-4 text-blue-500" />
-            <span className="text-xs text-gray-600 dark:text-gray-300">Data Intelligence</span>
-          </div>
-          <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-            <Code className="h-4 w-4 text-purple-500" />
-            <span className="text-xs text-gray-600 dark:text-gray-300">FastAPI + React</span>
-          </div>
+          {features.map((feature, index) => (
+            <div 
+              key={index} 
+              className="flex items-center gap-2 p-2 rounded-md border"
+              style={{ 
+                backgroundColor: colors.panelAlt,
+                borderColor: colors.border
+              }}
+            >
+              <span style={{ color: feature.color }}>{feature.icon}</span>
+              <span className="text-xs font-mono" style={{ color: colors.textMuted }}>{feature.label}</span>
+            </div>
+          ))}
         </div>
 
-        <div className="flex items-center gap-4 pt-2 border-t border-gray-200 dark:border-gray-700">
-          <a href="#" className="text-sm text-gray-500 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-            <GitBranch className="h-4 w-4 inline mr-1" />
+        <div className="flex items-center gap-4 pt-2 border-t" style={{ borderColor: colors.border }}>
+          <a 
+            href="#" 
+            className="text-xs font-mono transition-colors hover:opacity-80"
+            style={{ color: colors.textMuted }}
+          >
+            <GitBranch className="h-3.5 w-3.5 inline mr-1" />
             GitHub
           </a>
-          <span className="text-sm text-gray-500 dark:text-gray-400">MIT License</span>
-          <span className="text-sm text-gray-500 dark:text-gray-400">© 2026</span>
+          <span className="text-xs font-mono" style={{ color: colors.textDim }}>MIT License</span>
+          <span className="text-xs font-mono" style={{ color: colors.textDim }}>© 2026</span>
         </div>
       </div>
     </div>

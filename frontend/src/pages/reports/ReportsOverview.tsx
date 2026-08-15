@@ -1,6 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { FileText, FileSpreadsheet, Award, Clock, Database, Activity } from 'lucide-react'
-import { Badge } from '../../components/common/Badge'
 
 interface ReportsOverviewProps {
   reportsCount: number
@@ -19,65 +18,89 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({
   datasetName,
   healthScore,
 }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      purple: '#B48CF2',
+    }
+  }
+
   const items = [
     {
       label: 'Reports Generated',
       value: reportsCount,
-      icon: <FileText className="h-5 w-5" />,
-      color: 'text-primary-600 dark:text-primary-400',
-      bg: 'bg-primary-50 dark:bg-primary-900/20',
+      icon: <FileText className="h-4 w-4" />,
+      color: colors.accent.amber,
     },
     {
       label: 'Available Formats',
       value: formats.join(' • '),
-      icon: <FileSpreadsheet className="h-5 w-5" />,
-      color: 'text-blue-600 dark:text-blue-400',
-      bg: 'bg-blue-50 dark:bg-blue-900/20',
+      icon: <FileSpreadsheet className="h-4 w-4" />,
+      color: colors.accent.azure,
     },
     {
       label: 'Report Status',
       value: status,
-      icon: <Award className="h-5 w-5" />,
-      color: 'text-success-600 dark:text-success-400',
-      bg: 'bg-success-50 dark:bg-success-900/20',
-      badge: 'success',
+      icon: <Award className="h-4 w-4" />,
+      color: colors.accent.teal,
     },
     {
       label: 'Generated At',
       value: generatedAt,
-      icon: <Clock className="h-5 w-5" />,
-      color: 'text-gray-600 dark:text-gray-400',
-      bg: 'bg-gray-50 dark:bg-gray-800/50',
+      icon: <Clock className="h-4 w-4" />,
+      color: colors.textMuted,
     },
     {
       label: 'Dataset',
       value: datasetName,
-      icon: <Database className="h-5 w-5" />,
-      color: 'text-purple-600 dark:text-purple-400',
-      bg: 'bg-purple-50 dark:bg-purple-900/20',
+      icon: <Database className="h-4 w-4" />,
+      color: colors.accent.purple,
     },
     {
       label: 'AI Health Score',
       value: `${healthScore}%`,
-      icon: <Activity className="h-5 w-5" />,
-      color: healthScore >= 70 ? 'text-success-600 dark:text-success-400' : 'text-warning-600 dark:text-warning-400',
-      bg: healthScore >= 70 ? 'bg-success-50 dark:bg-success-900/20' : 'bg-warning-50 dark:bg-warning-900/20',
+      icon: <Activity className="h-4 w-4" />,
+      color: healthScore >= 70 ? colors.accent.teal : colors.accent.amber,
     },
   ]
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       {items.map((item, index) => (
         <div
           key={index}
-          className={`${item.bg} rounded-xl p-4 border border-gray-100 dark:border-gray-700 transition-all duration-200 hover:shadow-md`}
+          className="rounded-lg border p-4 transition-colors duration-300"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
         >
           <div className="flex items-center gap-2">
-            <div className={item.color}>{item.icon}</div>
-            <span className="text-xs text-gray-500 dark:text-gray-400">{item.label}</span>
+            <div style={{ color: item.color }}>{item.icon}</div>
+            <span className="text-xs font-mono" style={{ color: colors.textMuted }}>{item.label}</span>
           </div>
           <div className="mt-1">
-            <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value}</span>
+            <span className="text-sm font-bold" style={{ color: colors.text }}>{item.value}</span>
           </div>
         </div>
       ))}

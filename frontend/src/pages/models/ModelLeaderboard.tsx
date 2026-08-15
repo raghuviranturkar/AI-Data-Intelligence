@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Trophy, Award, Medal, TrendingUp, TrendingDown, ChevronUp, ChevronDown } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { cn } from '../../utils/cn'
@@ -12,12 +12,43 @@ type SortKey = 'rank' | 'model_name' | 'score' | 'cv_score' | 'training_time'
 const ModelLeaderboard: React.FC<ModelLeaderboardProps> = ({ rankedModels }) => {
   const [sortKey, setSortKey] = useState<SortKey>('rank')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+    }
+  }
 
   if (rankedModels.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Model Leaderboard</h3>
-        <p className="text-gray-400 dark:text-gray-500">No models to display</p>
+      <div 
+        className="rounded-lg border p-6 transition-colors duration-300"
+        style={{ 
+          backgroundColor: colors.panel,
+          borderColor: colors.border
+        }}
+      >
+        <h3 className="text-base font-semibold" style={{ color: colors.text }}>Model Leaderboard</h3>
+        <p className="text-sm font-mono mt-2" style={{ color: colors.textMuted }}>No models to display</p>
       </div>
     )
   }
@@ -44,10 +75,10 @@ const ModelLeaderboard: React.FC<ModelLeaderboardProps> = ({ rankedModels }) => 
 
   const getRankIcon = (rank: number) => {
     switch (rank) {
-      case 1: return <Trophy className="h-5 w-5 text-yellow-500" />
-      case 2: return <Award className="h-5 w-5 text-gray-400" />
-      case 3: return <Medal className="h-5 w-5 text-amber-600" />
-      default: return <span className="text-sm text-gray-400">{rank}</span>
+      case 1: return <Trophy className="h-5 w-5" style={{ color: colors.accent.amber }} />
+      case 2: return <Award className="h-5 w-5" style={{ color: colors.textMuted }} />
+      case 3: return <Medal className="h-5 w-5" style={{ color: '#B48CF2' }} />
+      default: return <span className="text-sm font-mono" style={{ color: colors.textDim }}>{rank}</span>
     }
   }
 
@@ -59,47 +90,69 @@ const ModelLeaderboard: React.FC<ModelLeaderboardProps> = ({ rankedModels }) => 
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
+    <div 
+      className="rounded-lg border p-6 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Model Leaderboard</h3>
-        <Badge variant="info" size="sm">{rankedModels.length} Models</Badge>
+        <div className="flex items-center gap-3">
+          <div 
+            className="p-1.5 rounded-md border"
+            style={{ 
+              backgroundColor: colors.panelAlt,
+              borderColor: colors.border
+            }}
+          >
+            <Trophy className="h-4 w-4" style={{ color: colors.accent.amber }} />
+          </div>
+          <h3 className="text-base font-semibold" style={{ color: colors.text }}>Model Leaderboard</h3>
+          <Badge variant="info" size="sm">{rankedModels.length} Models</Badge>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200 dark:border-gray-700">
+            <tr className="border-b" style={{ borderColor: colors.border }}>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                className="px-3 py-2 text-left text-xs font-mono cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ color: colors.textMuted }}
                 onClick={() => handleSort('rank')}
               >
                 Rank {getSortIcon('rank')}
               </th>
               <th 
-                className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                className="px-3 py-2 text-left text-xs font-mono cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ color: colors.textMuted }}
                 onClick={() => handleSort('model_name')}
               >
                 Model {getSortIcon('model_name')}
               </th>
               <th 
-                className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                className="px-3 py-2 text-right text-xs font-mono cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ color: colors.textMuted }}
                 onClick={() => handleSort('score')}
               >
                 Score {getSortIcon('score')}
               </th>
               <th 
-                className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                className="px-3 py-2 text-right text-xs font-mono cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ color: colors.textMuted }}
                 onClick={() => handleSort('cv_score')}
               >
                 CV Score {getSortIcon('cv_score')}
               </th>
               <th 
-                className="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300"
+                className="px-3 py-2 text-right text-xs font-mono cursor-pointer hover:opacity-80 transition-opacity"
+                style={{ color: colors.textMuted }}
                 onClick={() => handleSort('training_time')}
               >
                 Time {getSortIcon('training_time')}
               </th>
-              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">
+              <th className="px-3 py-2 text-center text-xs font-mono" style={{ color: colors.textMuted }}>
                 Status
               </th>
             </tr>
@@ -114,9 +167,13 @@ const ModelLeaderboard: React.FC<ModelLeaderboardProps> = ({ rankedModels }) => 
                 <tr
                   key={model.model_name}
                   className={cn(
-                    'border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors',
-                    isBest ? 'bg-success-50/30 dark:bg-success-900/10' : ''
+                    'border-b transition-colors',
+                    isBest ? 'bg-[#F0A94E]/5' : ''
                   )}
+                  style={{ 
+                    borderColor: colors.border,
+                    backgroundColor: isBest ? 'rgba(240,169,78,0.05)' : undefined
+                  }}
                 >
                   <td className="px-3 py-3">
                     <div className="flex items-center gap-1">
@@ -124,22 +181,22 @@ const ModelLeaderboard: React.FC<ModelLeaderboardProps> = ({ rankedModels }) => 
                     </div>
                   </td>
                   <td className="px-3 py-3">
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="font-medium text-sm" style={{ color: colors.text }}>
                       {model.model_name}
                     </span>
                   </td>
                   <td className="px-3 py-3 text-right">
-                    <span className="font-mono text-gray-900 dark:text-white">
+                    <span className="font-mono text-sm" style={{ color: colors.text }}>
                       {model.score ? (model.score * 100).toFixed(1) : 'N/A'}%
                     </span>
                   </td>
                   <td className="px-3 py-3 text-right">
-                    <span className="font-mono text-gray-500 dark:text-gray-400">
+                    <span className="font-mono text-sm" style={{ color: colors.textMuted }}>
                       {model.cv_score ? (model.cv_score * 100).toFixed(1) : 'N/A'}%
                     </span>
                   </td>
                   <td className="px-3 py-3 text-right">
-                    <span className="font-mono text-gray-500 dark:text-gray-400">
+                    <span className="font-mono text-sm" style={{ color: colors.textMuted }}>
                       {model.training_time ? model.training_time.toFixed(2) : '—'}s
                     </span>
                   </td>

@@ -103,12 +103,5 @@ tests/test_enhancements.py::test_enhancements
   /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/pandas/core/nanops.py:1028: RuntimeWarning: invalid value encountered in subtract
     sqr = _ensure_numeric((avg - values) ** 2)
 
-tests/test_upload.py::test_upload_success
-tests/test_upload.py::test_upload_success
-tests/test_upload.py::test_upload_success
-tests/test_upload.py::test_upload_success
-  /Users/raghuviranturkar/AI-Data-Intelligence/backend/venv/lib/python3.13/site-packages/sklearn/metrics/_ranking.py:469: UndefinedMetricWarning: Only one class is present in y_true. ROC AUC score is not defined in that case.
-    warnings.warn(
-
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
-======================= 27 passed, 53 warnings in 8.94s ========================
+======================= 27 passed, 49 warnings in 9.00s ========================

@@ -1,5 +1,5 @@
-import React from 'react'
-import { CheckCircle, Loader2, Clock, AlertCircle } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { CheckCircle, Loader2, Clock, AlertCircle, Activity } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 import { cn } from '../../utils/cn'
 
@@ -20,43 +20,77 @@ const AnalysisTimelineSection: React.FC<AnalysisTimelineSectionProps> = ({
   steps,
   className,
 }) => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      coral: '#F2555A',
+    }
+  }
+
   const getStatusIcon = (status: TimelineStep['status']) => {
     switch (status) {
-      case 'completed': return <CheckCircle className="h-5 w-5 text-success-500" />
-      case 'running': return <Loader2 className="h-5 w-5 text-primary-500 animate-spin" />
-      case 'error': return <AlertCircle className="h-5 w-5 text-danger-500" />
-      default: return <Clock className="h-5 w-5 text-gray-400" />
+      case 'completed': return <CheckCircle className="h-4 w-4" style={{ color: colors.accent.teal }} />
+      case 'running': return <Loader2 className="h-4 w-4 animate-spin" style={{ color: colors.accent.amber }} />
+      case 'error': return <AlertCircle className="h-4 w-4" style={{ color: colors.accent.coral }} />
+      default: return <Clock className="h-4 w-4" style={{ color: colors.textDim }} />
     }
   }
 
   const getStatusColor = (status: TimelineStep['status']) => {
     switch (status) {
-      case 'completed': return 'border-success-500'
-      case 'running': return 'border-primary-500'
-      case 'error': return 'border-danger-500'
-      default: return 'border-gray-300 dark:border-gray-600'
+      case 'completed': return colors.accent.teal
+      case 'running': return colors.accent.amber
+      case 'error': return colors.accent.coral
+      default: return colors.textDim
     }
   }
 
   const getStatusBg = (status: TimelineStep['status']) => {
     switch (status) {
-      case 'completed': return 'bg-success-50 dark:bg-success-900/20'
-      case 'running': return 'bg-primary-50 dark:bg-primary-900/20'
-      case 'error': return 'bg-danger-50 dark:bg-danger-900/20'
-      default: return 'bg-gray-50 dark:bg-gray-800/50'
+      case 'completed': return isDark ? 'rgba(62,207,142,0.05)' : '#F0FDF4'
+      case 'running': return isDark ? 'rgba(240,169,78,0.05)' : '#FFFBEB'
+      case 'error': return isDark ? 'rgba(242,85,90,0.05)' : '#FEF2F2'
+      default: return colors.panelAlt
     }
   }
 
-  // Calculate completion stats
   const completedCount = steps.filter(s => s.status === 'completed').length
   const totalCount = steps.length
   const allCompleted = completedCount === totalCount
 
   return (
     <div className={cn('space-y-4', className)}>
-      <div className="flex items-center gap-2">
-        <Clock className="h-5 w-5 text-gray-400 dark:text-gray-500" />
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Analysis Timeline</h3>
+      <div className="flex items-center gap-3">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <Activity className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Analysis Timeline</h3>
         <Badge variant={allCompleted ? 'success' : 'warning'} size="sm">
           {completedCount}/{totalCount} Complete
         </Badge>
@@ -65,49 +99,67 @@ const AnalysisTimelineSection: React.FC<AnalysisTimelineSectionProps> = ({
         )}
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div 
+        className="rounded-md border p-5"
+        style={{ 
+          backgroundColor: colors.panel,
+          borderColor: colors.border
+        }}
+      >
         <div className="relative">
           {/* Vertical line */}
-          <div className="absolute left-5 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
+          <div 
+            className="absolute left-4 top-2 bottom-2 w-0.5"
+            style={{ backgroundColor: colors.border }}
+          />
 
-          <div className="space-y-4">
-            {steps.map((step) => (
-              <div key={step.id} className="relative flex items-start gap-4">
-                {/* Status indicator */}
-                <div className={cn(
-                  'relative z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 transition-colors duration-300',
-                  getStatusColor(step.status),
-                  getStatusBg(step.status)
-                )}>
-                  {getStatusIcon(step.status)}
-                </div>
+          <div className="space-y-3">
+            {steps.map((step) => {
+              const statusColor = getStatusColor(step.status)
+              const statusBg = getStatusBg(step.status)
 
-                {/* Content */}
-                <div className="flex-1 pt-1">
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <p className={cn(
-                      'font-medium',
-                      step.status === 'completed' ? 'text-gray-900 dark:text-white' :
-                      step.status === 'running' ? 'text-primary-600 dark:text-primary-400' :
-                      step.status === 'error' ? 'text-danger-600 dark:text-danger-400' :
-                      'text-gray-400 dark:text-gray-500'
-                    )}>
-                      {step.label}
-                    </p>
-                    {step.timestamp && (
-                      <span className="text-xs text-gray-400 dark:text-gray-500">
-                        {step.timestamp}
-                      </span>
+              return (
+                <div key={step.id} className="relative flex items-start gap-4">
+                  {/* Status indicator */}
+                  <div 
+                    className="relative z-10 flex h-8 w-8 items-center justify-center rounded-md border transition-colors duration-300"
+                    style={{ 
+                      backgroundColor: statusBg,
+                      borderColor: statusColor,
+                    }}
+                  >
+                    {getStatusIcon(step.status)}
+                  </div>
+
+                  {/* Content */}
+                  <div className="flex-1 pt-0.5">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <p 
+                        className="text-xs font-medium"
+                        style={{ 
+                          color: step.status === 'completed' ? colors.text : 
+                                 step.status === 'running' ? colors.accent.amber : 
+                                 step.status === 'error' ? colors.accent.coral : 
+                                 colors.textDim
+                        }}
+                      >
+                        {step.label}
+                      </p>
+                      {step.timestamp && (
+                        <span className="text-[10px] font-mono" style={{ color: colors.textDim }}>
+                          {step.timestamp}
+                        </span>
+                      )}
+                    </div>
+                    {step.description && (
+                      <p className="text-[10px] font-mono mt-0.5" style={{ color: colors.textMuted }}>
+                        {step.description}
+                      </p>
                     )}
                   </div>
-                  {step.description && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
-                      {step.description}
-                    </p>
-                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </div>

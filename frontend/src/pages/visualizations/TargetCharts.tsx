@@ -1,14 +1,41 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
-import { useTheme } from '../../context/ThemeContext'
+import { Target, Crosshair } from 'lucide-react'
+import { Badge } from '../../components/common/Badge'
+import { cn } from '../../utils/cn'
 
 interface TargetChartsProps {
   data: any
 }
 
 const TargetCharts: React.FC<TargetChartsProps> = ({ data }) => {
-  const { theme } = useTheme()
-  const isDark = theme === 'dark'
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      amber: '#F0A94E',
+      teal: '#3ECF8E',
+      azure: '#4EA1F0',
+      purple: '#B48CF2',
+      coral: '#F2555A',
+    }
+  }
 
   const automl = data?.automl || {}
   const target = automl?.target_column || null
@@ -16,64 +43,130 @@ const TargetCharts: React.FC<TargetChartsProps> = ({ data }) => {
 
   if (!target) {
     return (
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Target Analysis</h2>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-8 text-center">
-          <p className="text-gray-400 dark:text-gray-500">No target column detected</p>
+      <div 
+        className="rounded-lg border p-6 transition-colors duration-300"
+        style={{ 
+          backgroundColor: colors.panel,
+          borderColor: colors.border
+        }}
+      >
+        <div className="flex items-center gap-3 mb-4">
+          <div 
+            className="p-1.5 rounded-md border"
+            style={{ 
+              backgroundColor: colors.panelAlt,
+              borderColor: colors.border
+            }}
+          >
+            <Crosshair className="h-4 w-4" style={{ color: colors.accent.amber }} />
+          </div>
+          <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Target Analysis</h3>
+        </div>
+        <div className="text-center py-8">
+          <p className="text-sm font-mono" style={{ color: colors.textMuted }}>No target column detected</p>
         </div>
       </div>
     )
   }
 
-  // Sample target distribution data
   const targetData = [
     { name: 'Class 0', value: 60 },
     { name: 'Class 1', value: 40 },
   ]
 
-  const COLORS = ['#4F46E5', '#22C55E']
+  const COLORS = [colors.accent.azure, colors.accent.teal]
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Target Analysis</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Target Distribution</h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Target: <span className="font-medium">{target}</span></p>
-          <ResponsiveContainer width="100%" height={250}>
+    <div 
+      className="rounded-lg border p-6 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
+      <div className="flex items-center gap-3 mb-5">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <Target className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-sm font-semibold" style={{ color: colors.text }}>Target Analysis</h3>
+        <span className="text-xs font-mono" style={{ color: colors.textMuted }}>· {problemType || 'Unknown'} problem</span>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div 
+          className="rounded-md border p-4"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <h4 className="text-xs font-mono uppercase tracking-wider mb-3" style={{ color: colors.textMuted }}>
+            Target Distribution
+          </h4>
+          <p className="text-xs font-mono mb-4" style={{ color: colors.textMuted }}>
+            Target: <span className="font-medium" style={{ color: colors.text }}>{target}</span>
+          </p>
+          <ResponsiveContainer width="100%" height={220}>
             <PieChart>
-              <Pie data={targetData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} dataKey="value" label>
+              <Pie 
+                data={targetData} 
+                cx="50%" 
+                cy="50%" 
+                innerRadius={50} 
+                outerRadius={75} 
+                dataKey="value" 
+                label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                labelLine={false}
+              >
                 {targetData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: isDark ? '#1E293B' : '#FFFFFF',
-                  border: `1px solid ${isDark ? '#334155' : '#E5E7EB'}`,
+                  backgroundColor: isDark ? '#12181F' : '#FFFFFF',
+                  border: `1px solid ${isDark ? '#232B35' : '#E5E7EB'}`,
                   borderRadius: '8px',
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
-          <div className="mt-4 flex justify-center gap-6 text-sm">
-            <span className="text-gray-500 dark:text-gray-400">Problem Type: <span className="font-medium text-gray-900 dark:text-white capitalize">{problemType || 'Unknown'}</span></span>
-          </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Target Summary</h3>
-          <div className="space-y-4">
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Target Column</p>
-              <p className="text-lg font-bold text-gray-900 dark:text-white">{target}</p>
+
+        <div 
+          className="rounded-md border p-4"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <h4 className="text-xs font-mono uppercase tracking-wider mb-3" style={{ color: colors.textMuted }}>
+            Target Summary
+          </h4>
+          <div className="space-y-3">
+            <div className="p-3 rounded-md border" style={{ borderColor: colors.border }}>
+              <p className="text-[10px] font-mono" style={{ color: colors.textMuted }}>Target Column</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: colors.text }}>{target}</p>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Classes</p>
-              <p className="text-lg font-bold text-gray-900 dark:text-white">2</p>
+            <div className="p-3 rounded-md border" style={{ borderColor: colors.border }}>
+              <p className="text-[10px] font-mono" style={{ color: colors.textMuted }}>Classes</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: colors.text }}>2</p>
             </div>
-            <div className="p-3 bg-gray-50 dark:bg-gray-700/30 rounded-lg">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Class Balance</p>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">60% / 40%</p>
+            <div className="p-3 rounded-md border" style={{ borderColor: colors.border }}>
+              <p className="text-[10px] font-mono" style={{ color: colors.textMuted }}>Class Balance</p>
+              <p className="text-sm font-bold mt-0.5" style={{ color: colors.text }}>60% / 40%</p>
+            </div>
+            <div className="p-3 rounded-md border" style={{ borderColor: colors.border }}>
+              <p className="text-[10px] font-mono" style={{ color: colors.textMuted }}>Problem Type</p>
+              <p className="text-sm font-bold mt-0.5 capitalize" style={{ color: colors.text }}>
+                {problemType || 'Unknown'}
+              </p>
             </div>
           </div>
         </div>

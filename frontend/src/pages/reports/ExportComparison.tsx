@@ -1,5 +1,5 @@
-import React from 'react'
-import { Check, X } from 'lucide-react'
+import React, { useEffect, useState } from 'react'
+import { Check, X, GitCompare } from 'lucide-react'
 import { Badge } from '../../components/common/Badge'
 
 const comparisons = [
@@ -12,34 +12,75 @@ const comparisons = [
 ]
 
 const ExportComparison: React.FC = () => {
+  const [isDark, setIsDark] = useState(false)
+
+  useEffect(() => {
+    const checkDark = () => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    }
+    checkDark()
+    const observer = new MutationObserver(checkDark)
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
+    return () => observer.disconnect()
+  }, [])
+
+  const colors = {
+    border: isDark ? '#232B35' : '#E2E8F0',
+    panel: isDark ? '#12181F' : '#FFFFFF',
+    panelAlt: isDark ? '#0B0F14' : '#F8FAFC',
+    text: isDark ? '#EDF1F5' : '#0F172A',
+    textMuted: isDark ? '#8B96A5' : '#64748B',
+    textDim: isDark ? '#4A5563' : '#94A3B8',
+    accent: {
+      teal: '#3ECF8E',
+      amber: '#F0A94E',
+    }
+  }
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md dark:shadow-gray-900/50 p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Export Formats Comparison</h3>
+    <div 
+      className="rounded-lg border p-6 transition-colors duration-300"
+      style={{ 
+        backgroundColor: colors.panel,
+        borderColor: colors.border
+      }}
+    >
+      <div className="flex items-center gap-3 mb-4">
+        <div 
+          className="p-1.5 rounded-md border"
+          style={{ 
+            backgroundColor: colors.panelAlt,
+            borderColor: colors.border
+          }}
+        >
+          <GitCompare className="h-4 w-4" style={{ color: colors.accent.amber }} />
+        </div>
+        <h3 className="text-base font-semibold" style={{ color: colors.text }}>Export Formats Comparison</h3>
         <Badge variant="info" size="sm">3 Formats</Badge>
       </div>
+
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200 dark:border-gray-700">
-              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Feature</th>
-              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">PDF</th>
-              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">HTML</th>
-              <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 dark:text-gray-400">Markdown</th>
+            <tr className="border-b" style={{ borderColor: colors.border }}>
+              <th className="px-3 py-2 text-left text-xs font-mono" style={{ color: colors.textMuted }}>Feature</th>
+              <th className="px-3 py-2 text-center text-xs font-mono" style={{ color: colors.textMuted }}>PDF</th>
+              <th className="px-3 py-2 text-center text-xs font-mono" style={{ color: colors.textMuted }}>HTML</th>
+              <th className="px-3 py-2 text-center text-xs font-mono" style={{ color: colors.textMuted }}>Markdown</th>
             </tr>
           </thead>
           <tbody>
             {comparisons.map((item, index) => (
-              <tr key={index} className="border-b border-gray-100 dark:border-gray-700/50">
-                <td className="px-3 py-2 text-sm text-gray-700 dark:text-gray-300">{item.feature}</td>
+              <tr key={index} className="border-b" style={{ borderColor: colors.border }}>
+                <td className="px-3 py-2 text-sm font-mono" style={{ color: colors.text }}>{item.feature}</td>
                 <td className="px-3 py-2 text-center">
-                  {item.pdf ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-300 dark:text-gray-600 mx-auto" />}
+                  {item.pdf ? <Check className="h-4 w-4 mx-auto" style={{ color: colors.accent.teal }} /> : <X className="h-4 w-4 mx-auto" style={{ color: colors.textDim }} />}
                 </td>
                 <td className="px-3 py-2 text-center">
-                  {item.html ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-300 dark:text-gray-600 mx-auto" />}
+                  {item.html ? <Check className="h-4 w-4 mx-auto" style={{ color: colors.accent.teal }} /> : <X className="h-4 w-4 mx-auto" style={{ color: colors.textDim }} />}
                 </td>
                 <td className="px-3 py-2 text-center">
-                  {item.markdown ? <Check className="h-4 w-4 text-success-500 mx-auto" /> : <X className="h-4 w-4 text-gray-300 dark:text-gray-600 mx-auto" />}
+                  {item.markdown ? <Check className="h-4 w-4 mx-auto" style={{ color: colors.accent.teal }} /> : <X className="h-4 w-4 mx-auto" style={{ color: colors.textDim }} />}
                 </td>
               </tr>
             ))}
